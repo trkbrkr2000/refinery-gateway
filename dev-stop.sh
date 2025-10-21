@@ -7,6 +7,13 @@ echo "🛑 Stopping Refinery Platform Development Services..."
 echo ""
 
 # Stop services by PID files
+if [ -f logs/.formready.pid ]; then
+    FORMREADY_PID=$(cat logs/.formready.pid)
+    echo "Stopping FormReady (PID: $FORMREADY_PID)..."
+    kill $FORMREADY_PID 2>/dev/null || echo "  Already stopped"
+    rm logs/.formready.pid
+fi
+
 if [ -f logs/.gateway.pid ]; then
     GATEWAY_PID=$(cat logs/.gateway.pid)
     echo "Stopping Gateway (PID: $GATEWAY_PID)..."
@@ -31,6 +38,7 @@ fi
 # Also kill by port as backup
 echo ""
 echo "🧹 Cleaning up any remaining processes on ports..."
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 lsof -ti:3001 | xargs kill -9 2>/dev/null || true
 lsof -ti:8080 | xargs kill -9 2>/dev/null || true
 lsof -ti:8000 | xargs kill -9 2>/dev/null || true

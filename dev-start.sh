@@ -13,6 +13,7 @@ echo "🧹 Cleaning up existing processes..."
 lsof -ti:3001 | xargs kill -9 2>/dev/null || true
 lsof -ti:8080 | xargs kill -9 2>/dev/null || true
 lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 sleep 2
 
 # Create logs directory
@@ -62,6 +63,16 @@ PYTHON_PID=$!
 echo "   PID: $PYTHON_PID"
 cd ..
 
+sleep 3
+
+# Start FormReady Frontend (port 3000)
+echo "4️⃣  Starting refinery-formready on port 3000..."
+cd refinery-formready
+npm run dev > ../logs/formready.log 2>&1 &
+FORMREADY_PID=$!
+echo "   PID: $FORMREADY_PID"
+cd ..
+
 echo ""
 echo "⏳ Waiting for services to start..."
 sleep 5
@@ -71,12 +82,14 @@ echo "✅ All services started!"
 echo ""
 echo "📊 Service Status:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  FormReady:   http://localhost:3000 (PID: $FORMREADY_PID)"
 echo "  Gateway:     http://localhost:8080 (PID: $GATEWAY_PID)"
 echo "  API:         http://localhost:3001 (PID: $API_PID)"
 echo "  Python:      http://localhost:8000 (PID: $PYTHON_PID)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📚 Documentation:"
+echo "  FormReady UI:  http://localhost:3000"
 echo "  Gateway Docs:  http://localhost:8080/api/docs"
 echo "  API Docs:      http://localhost:3001/api/docs"
 echo "  Python Docs:   http://localhost:8000/docs"
@@ -86,6 +99,7 @@ echo "🛑 To stop all services, run: ./dev-stop.sh"
 echo ""
 
 # Save PIDs for stop script
+echo "$FORMREADY_PID" > logs/.formready.pid
 echo "$GATEWAY_PID" > logs/.gateway.pid
 echo "$API_PID" > logs/.api.pid
 echo "$PYTHON_PID" > logs/.python.pid
