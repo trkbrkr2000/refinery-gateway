@@ -21,24 +21,34 @@ import { RedisService } from './redis.service';
 
         console.log(`🔌 Connecting to Redis: ${redisUrl.replace(/:\/\/.*@/, '://***@')}`);
 
-        const store = await redisStore({
-          url: redisUrl,
-          ttl: 60 * 1000, // 1 minute default
-          lazyConnect: false,
-          enableOfflineQueue: false,
-          retryStrategy: (times) => {
-            if (times > 3) {
-              console.error('❌ Redis connection failed after 3 retries');
-              return null; // Stop retrying
-            }
-            return Math.min(times * 100, 3000);
-          },
-        });
+        try {
+          const store = await redisStore({
+            url: redisUrl,
+            ttl: 60 * 1000, // 1 minute default
+            lazyConnect: true, // Don't connect immediately
+            enableOfflineQueue: false,
+            retryStrategy: (times) => {
+              if (times > 3) {
+                console.error('❌ Redis connection failed after 3 retries');
+                return null; // Stop retrying
+              }
+              return Math.min(times * 100, 3000);
+            },
+          });
 
-        return {
-          store: store as any,
-          ttl: 60 * 1000,
-        } as any;
+          console.log('✅ Redis store configured successfully');
+
+          return {
+            store: store as any,
+            ttl: 60 * 1000,
+          } as any;
+        } catch (error) {
+          console.error('❌ Failed to create Redis store:', error.message);
+          console.warn('⚠️  Falling back to in-memory cache');
+          return {
+            ttl: 60 * 1000, // 1 minute default
+          } as any;
+        }
       },
       inject: [ConfigService],
     }),
