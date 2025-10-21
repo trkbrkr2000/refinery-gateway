@@ -37,7 +37,7 @@ export class GatewayService {
           maxRedirects: 5,
           timeout: 30000, // 30 second timeout
           validateStatus: () => true, // Don't throw on any status
-          family: 4, // Force IPv4
+          family: 0, // Let Node.js auto-select IP version (fixes Railway internal DNS)
         }),
       );
 

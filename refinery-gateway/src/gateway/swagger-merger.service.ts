@@ -109,7 +109,10 @@ export class SwaggerMergerService {
         for (const swaggerUrl of swaggerUrls) {
           try {
             const response = await firstValueFrom(
-              this.httpService.get(swaggerUrl, { timeout: 5000 }),
+              this.httpService.get(swaggerUrl, {
+                timeout: 5000,
+                family: 0, // Let Node.js auto-select IP version (fixes Railway internal DNS)
+              }),
             );
             serviceDoc = response.data;
             break; // Success!
