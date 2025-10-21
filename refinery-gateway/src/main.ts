@@ -5,7 +5,13 @@ import { AppModule } from './app.module';
 import { SwaggerMergerService } from './gateway/swagger-merger.service';
 
 async function bootstrap() {
+  console.log('🚀 Starting Refinery API Gateway...');
+  console.log('📊 Environment:', process.env.NODE_ENV || 'development');
+  console.log('🔌 MongoDB URI:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
+  console.log('🔌 Redis URL:', process.env.REDIS_URL ? 'SET' : 'NOT SET');
+
   const app = await NestFactory.create(AppModule);
+  console.log('✅ NestJS application created');
 
   // Enable CORS
   app.enableCors({

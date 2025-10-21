@@ -18,6 +18,11 @@ import { AdminModule } from './admin/admin.module';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('MONGODB_URI') || 'mongodb://localhost:27017/refinery-gateway',
+        serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+        socketTimeoutMS: 45000,
+        connectTimeoutMS: 10000,
+        retryWrites: true,
+        retryReads: true,
       }),
       inject: [ConfigService],
     }),
