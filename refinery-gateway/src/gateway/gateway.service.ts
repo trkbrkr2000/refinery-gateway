@@ -35,7 +35,9 @@ export class GatewayService {
           headers: this.buildHeaders(req),
           params: req.query,
           maxRedirects: 5,
+          timeout: 30000, // 30 second timeout
           validateStatus: () => true, // Don't throw on any status
+          family: 4, // Force IPv4
         }),
       );
 
