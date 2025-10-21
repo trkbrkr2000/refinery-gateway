@@ -14,7 +14,7 @@ export default defineNuxtConfig({
 
   // Development server configuration
   devServer: {
-    port: 4200,
+    port: 3000,
     host: '0.0.0.0'
   },
 
@@ -53,5 +53,10 @@ export default defineNuxtConfig({
       firebaseAppId: process.env.NUXT_PUBLIC_FIREBASE_APP_ID || '',
       firebaseMeasurementId: process.env.NUXT_PUBLIC_FIREBASE_MEASUREMENT_ID || ''
     }
+  },
+
+  // Nitro (server) configuration for production
+  nitro: {
+    preset: 'node-server'
   }
 })
