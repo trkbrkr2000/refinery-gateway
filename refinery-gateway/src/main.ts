@@ -100,6 +100,14 @@ async function bootstrap() {
     // Add gateway's own paths to merged doc
     Object.assign(mergedDocument.paths, gatewayDocument.paths);
 
+    // Override servers to use production URL
+    mergedDocument.servers = [
+      {
+        url: baseUrl,
+        description: process.env.NODE_ENV === 'production' ? 'Production Gateway' : 'Development Gateway',
+      },
+    ];
+
     SwaggerModule.setup('api/docs', app, mergedDocument, {
       swaggerOptions: {
         persistAuthorization: true,
