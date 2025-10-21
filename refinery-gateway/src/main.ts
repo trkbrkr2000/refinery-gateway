@@ -1,0 +1,99 @@
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppModule } from './app.module';
+import { SwaggerMergerService } from './gateway/swagger-merger.service';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  // Enable CORS
+  app.enableCors({
+    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
+    credentials: true,
+  });
+
+  // Enable validation
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
+
+  // Gateway-only Swagger (auth, admin, health endpoints)
+  const gatewayConfig = new DocumentBuilder()
+    .setTitle('Refinery API Gateway')
+    .setDescription(
+      'Gateway endpoints for authentication, admin, and health checks',
+    )
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT',
+    )
+    .addApiKey(
+      {
+        type: 'apiKey',
+        name: 'x-api-key',
+        in: 'header',
+        description: 'API key for service-to-service authentication',
+      },
+      'API-KEY',
+    )
+    .addTag('Auth', 'Authentication endpoints')
+    .addTag('Admin', 'Admin API for user and key management')
+    .addTag('Gateway', 'Health and status')
+    .build();
+
+  const gatewayDocument = SwaggerModule.createDocument(app, gatewayConfig);
+  SwaggerModule.setup('api/docs/gateway', app, gatewayDocument, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
+
+  // Merged Swagger (all services combined)
+  const swaggerMerger = app.get(SwaggerMergerService);
+  try {
+    console.log('🔄 Fetching and merging backend service Swagger docs...');
+    const mergedDocument = await swaggerMerger.getMergedSwaggerDoc();
+
+    // Add gateway's own paths to merged doc
+    Object.assign(mergedDocument.paths, gatewayDocument.paths);
+
+    SwaggerModule.setup('api/docs', app, mergedDocument, {
+      swaggerOptions: {
+        persistAuthorization: true,
+        tagsSorter: 'alpha',
+        operationsSorter: 'alpha',
+      },
+    });
+    console.log('✅ Merged Swagger documentation ready');
+  } catch (error) {
+    console.error('❌ Failed to merge Swagger docs:', error.message);
+    // Fallback to gateway-only docs
+    SwaggerModule.setup('api/docs', app, gatewayDocument, {
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+    });
+  }
+
+  const port = process.env.PORT || 8080;
+  await app.listen(port);
+
+  console.log(`🚀 API Gateway running on http://localhost:${port}`);
+  console.log(`📚 Unified API Docs: http://localhost:${port}/api/docs`);
+  console.log(`📚 Gateway-only Docs: http://localhost:${port}/api/docs/gateway`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+}
+
+bootstrap();
