@@ -40,6 +40,9 @@ async function bootstrap() {
     }),
   );
 
+  // Determine port for Swagger server URL
+  const port = process.env.PORT || 8080;
+
   // Gateway-only Swagger (auth, admin, health endpoints)
   const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
@@ -111,7 +114,6 @@ async function bootstrap() {
     });
   }
 
-  const port = process.env.PORT || 8080;
   await app.listen(port);
 
   console.log(`🚀 API Gateway running on http://localhost:${port}`);
