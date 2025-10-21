@@ -1,0 +1,37 @@
+{
+  "documentId": "demo-doc-123456",
+  "extractedAt": "2025-10-20T20:45:00.123456Z",
+  "veteranInfo": {
+    "firstName": "REDACTED",
+    "lastName": "REDACTED",
+    "ssn": "REDACTED"
+  },
+  "ratings": [
+    {
+      "condition": "Tinnitus",
+      "decision": "denied",
+      "ratingPercentage": 0
+    },
+    {
+      "condition": "PTSD",
+      "decision": "granted",
+      "ratingPercentage": 70,
+      "effectiveDate": "2024-01-01"
+    }
+  ],
+  "denialReasons": [
+    {
+      "condition": "Tinnitus",
+      "reason": "Insufficient evidence of in-service event",
+      "category": "insufficient_evidence"
+    }
+  ],
+  "rawText": "DEPARTMENT OF VETERANS AFFAIRS\nRATING DECISION\n\nVeteran: [REDACTED]\n\nExtracted with Docling...",
+  "piiRedacted": true,
+  "extractionMetadata": {
+    "method": "docling",
+    "confidence": 0.95,
+    "pageCount": 8,
+    "processingTimeMs": 2500
+  }
+}

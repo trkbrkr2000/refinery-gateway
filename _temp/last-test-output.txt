@@ -1,0 +1,126 @@
+==========================================
+Testing VA Decision Letter Extraction
+==========================================
+PDF: sample-data/decisions/ClaimLetter-2025-4-11.pdf
+
+Sending request to API...
+{
+  "success": true,
+  "extracted_data": {
+    "veteran_name": "JAMES FREDERICK LIVINGSTON",
+    "ssn_last_4": null,
+    "decision_date": "April 11, 2025",
+    "effective_date": "August 14, 2024",
+    "combined_rating": 80,
+    "conditions": [
+      {
+        "name": "left hip condition with degenerative arthritis",
+        "status": "granted",
+        "rating": 10,
+        "effective_date": "August 14, 2024"
+      },
+      {
+        "name": "right hip condition with degenerative arthritis",
+        "status": "granted",
+        "rating": 10,
+        "effective_date": "August 14, 2024"
+      },
+      {
+        "name": "right knee condition with patellar tendinopathy",
+        "status": "granted",
+        "rating": 10,
+        "effective_date": "August 14, 2024"
+      },
+      {
+        "name": "high, impairment of right hip",
+        "status": "granted",
+        "rating": 0,
+        "effective_date": "August 14, 2024"
+      },
+      {
+        "name": "left hand condition with chronic pain and deformity of index finger with arthritis",
+        "status": "granted",
+        "rating": 0,
+        "effective_date": "August 14, 2024"
+      },
+      {
+        "name": "thigh, impairment of left hip",
+        "status": "granted",
+        "rating": 0,
+        "effective_date": "August 14, 2024"
+      },
+      {
+        "name": "thigh, limitation of extension of left hip",
+        "status": "granted",
+        "rating": 0,
+        "effective_date": "August 14, 2024"
+      },
+      {
+        "name": "thigh, limitation of extension of right hip",
+        "status": "granted",
+        "rating": 0,
+        "effective_date": "August 14, 2024"
+      },
+      {
+        "name": "bilateral hearing loss",
+        "status": "denied",
+        "rating": null,
+        "effective_date": null
+      },
+      {
+        "name": "lower back condition with chronic pain",
+        "status": "deferred",
+        "rating": null,
+        "effective_date": null
+      }
+    ],
+    "rating_history": [
+      {
+        "rating": 70,
+        "effective_date": "September 9, 2019"
+      },
+      {
+        "rating": 70,
+        "effective_date": "August 19, 2020"
+      },
+      {
+        "rating": 80,
+        "effective_date": "August 14, 2024"
+      }
+    ],
+    "monthly_payment_history": [
+      {
+        "amount": 2365.01,
+        "effective_date": "September 1, 2024"
+      },
+      {
+        "amount": 2424.89,
+        "effective_date": "December 1, 2024"
+      },
+      {
+        "amount": 2340.89,
+        "effective_date": "January 29, 2028"
+      },
+      {
+        "amount": 2214.89,
+        "effective_date": "December 11, 2029"
+      }
+    ],
+    "is_at_100_percent": false,
+    "total_conditions": 10,
+    "approved_conditions": 8,
+    "denied_conditions": 1,
+    "deferred_conditions": 1,
+    "current_monthly_payment": 2365.01
+  },
+  "metadata": {
+    "filename": "ClaimLetter-2025-4-11.pdf",
+    "pdf_pages": 23,
+    "text_length": 41452,
+    "extraction_method": "ai"
+  }
+}
+
+==========================================
+Test Complete
+==========================================
