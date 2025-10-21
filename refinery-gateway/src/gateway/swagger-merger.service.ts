@@ -27,18 +27,11 @@ export class SwaggerMergerService {
   async getMergedSwaggerDoc(): Promise<SwaggerDocument> {
     const services = [
       {
-        name: 'VA Knowledge',
-        prefix: '/api/va-knowledge',
-        url: this.configService.get<string>('VA_KNOWLEDGE_SERVICE_URL'),
-        tag: 'VA Knowledge',
-        description: 'VA regulations, statutes, and knowledge base',
-      },
-      {
-        name: 'Forms',
-        prefix: '/api/forms',
-        url: this.configService.get<string>('FORMS_SERVICE_URL'),
-        tag: 'Forms',
-        description: 'VA form generation and management',
+        name: 'Refinery API',
+        prefix: '/api',
+        url: this.configService.get<string>('FORMS_SERVICE_URL'), // Forms + VA Knowledge same backend
+        tag: 'Refinery API',
+        description: 'VA forms, knowledge base, and data services',
       },
       {
         name: 'Processor',
