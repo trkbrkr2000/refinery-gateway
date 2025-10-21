@@ -41,12 +41,17 @@ async function bootstrap() {
   );
 
   // Gateway-only Swagger (auth, admin, health endpoints)
+  const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : `http://localhost:${port}`;
+
   const gatewayConfig = new DocumentBuilder()
     .setTitle('Refinery API Gateway')
     .setDescription(
       'Gateway endpoints for authentication, admin, and health checks',
     )
     .setVersion('1.0')
+    .addServer(baseUrl, process.env.NODE_ENV === 'production' ? 'Production' : 'Development')
     .addBearerAuth(
       {
         type: 'http',
