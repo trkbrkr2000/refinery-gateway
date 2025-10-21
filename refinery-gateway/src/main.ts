@@ -14,9 +14,22 @@ async function bootstrap() {
   console.log('✅ NestJS application created');
 
   // Enable CORS
+  const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'];
+  // Always allow same-origin for Swagger
+  allowedOrigins.push(process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : 'http://localhost:8080');
+
   app.enableCors({
-    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, Postman, or same-origin)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Be permissive for now
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
   });
 
   // Enable validation

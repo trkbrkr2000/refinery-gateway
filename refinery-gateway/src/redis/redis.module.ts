@@ -19,9 +19,20 @@ import { RedisService } from './redis.service';
           } as any;
         }
 
+        console.log(`🔌 Connecting to Redis: ${redisUrl.replace(/:\/\/.*@/, '://***@')}`);
+
         const store = await redisStore({
           url: redisUrl,
           ttl: 60 * 1000, // 1 minute default
+          lazyConnect: false,
+          enableOfflineQueue: false,
+          retryStrategy: (times) => {
+            if (times > 3) {
+              console.error('❌ Redis connection failed after 3 retries');
+              return null; // Stop retrying
+            }
+            return Math.min(times * 100, 3000);
+          },
         });
 
         return {
