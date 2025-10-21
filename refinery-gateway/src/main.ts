@@ -58,7 +58,7 @@ async function bootstrap() {
       'Gateway endpoints for authentication, admin, and health checks',
     )
     .setVersion('1.0')
-    .addServer(baseUrl, process.env.NODE_ENV === 'production' ? 'Production' : 'Development')
+    .addServer('', 'Current Server (auto-detected)')
     .addBearerAuth(
       {
         type: 'http',
@@ -100,11 +100,11 @@ async function bootstrap() {
     // Add gateway's own paths to merged doc
     Object.assign(mergedDocument.paths, gatewayDocument.paths);
 
-    // Override servers to use production URL
+    // Use relative URL - Swagger will automatically detect the correct host
     mergedDocument.servers = [
       {
-        url: baseUrl,
-        description: process.env.NODE_ENV === 'production' ? 'Production Gateway' : 'Development Gateway',
+        url: '',
+        description: 'Current Server (auto-detected)',
       },
     ];
 
