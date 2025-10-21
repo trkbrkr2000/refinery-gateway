@@ -44,9 +44,13 @@ async function bootstrap() {
   const port = process.env.PORT || 8080;
 
   // Gateway-only Swagger (auth, admin, health endpoints)
-  const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN
-    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+  // Railway sets RAILWAY_PUBLIC_DOMAIN or RAILWAY_STATIC_URL
+  const publicDomain = process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_STATIC_URL;
+  const baseUrl = publicDomain
+    ? `https://${publicDomain}`
     : `http://localhost:${port}`;
+
+  console.log(`🌐 Swagger server URL: ${baseUrl}`);
 
   const gatewayConfig = new DocumentBuilder()
     .setTitle('Refinery API Gateway')
