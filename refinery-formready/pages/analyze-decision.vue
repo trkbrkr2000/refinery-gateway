@@ -130,7 +130,7 @@
               class="p-4 bg-orange-50 border border-orange-200 rounded-lg"
             >
               <h3 class="font-semibold text-gray-900 mb-2">{{ denial.condition }}</h3>
-              <p class="text-gray-700">{{ denial.reason }}</p>
+              <p class="text-gray-700">{{ denial.laymanReason }}</p>
               <p class="text-sm text-gray-500 mt-2">Category: {{ denial.category }}</p>
             </div>
           </div>
