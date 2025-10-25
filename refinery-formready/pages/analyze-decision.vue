@@ -1,223 +1,188 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
-    <div class="max-w-4xl mx-auto px-4">
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-12">
+    <div class="max-w-7xl mx-auto px-4">
       <!-- Header -->
       <div class="text-center mb-12">
-        <h1 class="text-5xl font-bold text-gray-900 mb-4">
+        <h1 class="text-5xl font-bold text-slate-900 mb-4">
           VA Decision Letter Analysis
         </h1>
-        <p class="text-xl text-gray-600">
+        <p class="text-xl text-slate-600">
           Upload your VA decision letter to get instant analysis and understand your claim decision
         </p>
       </div>
 
       <!-- Upload Section -->
-      <div v-if="!analyzing && !results" class="bg-white rounded-2xl shadow-xl p-8">
-        <div class="mb-6">
-          <h2 class="text-2xl font-semibold text-gray-900 mb-2">Upload Your Decision Letter</h2>
-          <p class="text-gray-600">Upload your VA decision letter PDF (typically starts with "We made a decision on your VA benefits")</p>
-        </div>
-
-        <!-- File Upload Area -->
-        <div
-          @drop.prevent="handleDrop"
-          @dragover.prevent
-          @dragenter.prevent
-          class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-blue-500 transition-colors cursor-pointer"
-          :class="{ 'border-blue-500 bg-blue-50': dragover }"
-          @click="$refs.fileInput.click()"
-        >
-          <input
-            ref="fileInput"
-            type="file"
-            accept=".pdf"
-            @change="handleFileSelect"
-            class="hidden"
-          />
-
-          <div v-if="!selectedFile">
-            <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            <p class="text-lg text-gray-700 mb-2">Drop your decision letter here or click to browse</p>
-            <p class="text-sm text-gray-500">PDF files only</p>
-          </div>
-
-          <div v-else class="flex items-center justify-center">
-            <svg class="w-12 h-12 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div class="text-left">
-              <p class="text-lg font-semibold text-gray-900">{{ selectedFile.name }}</p>
-              <p class="text-sm text-gray-500">{{ formatFileSize(selectedFile.size) }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Analyze Button -->
-        <button
-          v-if="selectedFile"
-          @click="analyzeDecision"
-          :disabled="uploading"
-          class="w-full mt-6 px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {{ uploading ? 'Uploading...' : 'Analyze Decision Letter' }}
-        </button>
-
-        <!-- Error Message -->
-        <div v-if="error" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p class="text-red-800">{{ error }}</p>
-        </div>
-      </div>
+      <FileUploadZone
+        v-if="!analyzing && !processing && !results"
+        :uploading="uploading"
+        :error="error"
+        @file-select="handleFileSelect"
+        @analyze="analyzeDecision"
+      />
 
       <!-- Analyzing State -->
-      <div v-if="analyzing" class="bg-white rounded-2xl shadow-xl p-12 text-center">
-        <div class="animate-spin w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-6"></div>
-        <h3 class="text-2xl font-semibold text-gray-900 mb-2">Analyzing Your Decision Letter</h3>
-        <p class="text-gray-600">This may take 30-60 seconds...</p>
-      </div>
+      <AnalysisLoadingState
+        v-if="analyzing || processing"
+        :stage="currentStage"
+      />
 
       <!-- Results Section -->
-      <div v-if="results" class="space-y-6">
+      <div v-if="results" class="space-y-8">
         <!-- Veteran Info -->
-        <div v-if="results.veteranInfo" class="bg-white rounded-2xl shadow-xl p-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">Veteran Information</h2>
-          <div class="grid md:grid-cols-2 gap-4">
-            <div v-if="results.veteranInfo.firstName || results.veteranInfo.lastName">
-              <p class="text-sm text-gray-500">Name</p>
-              <p class="text-lg font-semibold">{{ results.veteranInfo.firstName }} {{ results.veteranInfo.lastName }}</p>
-            </div>
-            <div v-if="results.veteranInfo.ssn">
-              <p class="text-sm text-gray-500">SSN</p>
-              <p class="text-lg font-semibold">{{ results.veteranInfo.ssn }}</p>
-            </div>
-          </div>
-        </div>
+        <VeteranInfoCard 
+          v-if="results.veteranInfo"
+          :veteran-info="results.veteranInfo"
+        />
 
-        <!-- Ratings -->
-        <div class="bg-white rounded-2xl shadow-xl p-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">Rating Decisions</h2>
-          <div class="space-y-4">
-            <div
-              v-for="(rating, index) in results.ratings"
-              :key="index"
-              class="p-4 rounded-lg border-2"
-              :class="decisionClass(rating.decision)"
-            >
-              <div class="flex justify-between items-start mb-2">
-                <h3 class="font-semibold text-gray-900">{{ rating.condition }}</h3>
-                <span
-                  class="px-3 py-1 rounded-full text-sm font-semibold"
-                  :class="decisionClass(rating.decision)"
-                >
-                  {{ rating.decision.toUpperCase() }}
-                </span>
+        <!-- Main Content Grid -->
+        <div class="grid lg:grid-cols-3 gap-8">
+          <!-- Left Column - Main Content -->
+          <div class="lg:col-span-2 space-y-8">
+            <!-- Decision Summary -->
+            <DecisionSummarySection
+              :conditions="results.ratings"
+              :combined-rating="results.combinedRating"
+              :monthly-payment="results.monthlyPayment"
+            />
+
+            <!-- Denial Analysis -->
+            <DenialAnalysisCard
+              v-if="results.denialReasons?.length > 0"
+              :denial-reasons="results.denialReasons"
+            />
+
+            <!-- Deferred Reasons -->
+            <div v-if="results.deferredReasons?.length > 0" class="bg-white rounded-2xl shadow-xl p-8">
+              <div class="flex items-center mb-6">
+                <Icon name="heroicons:clock" class="w-6 h-6 mr-3" color="amber-600" />
+                <h2 class="text-2xl font-bold text-slate-900">Deferred Conditions</h2>
+                <Badge 
+                  :text="`${results.deferredReasons.length} Deferred`"
+                  variant="deferred"
+                  class="ml-3"
+                />
               </div>
-              <p class="text-2xl font-bold" :class="decisionClass(rating.decision)">
-                {{ rating.ratingPercentage }}%
-              </p>
+              
+              <div class="space-y-4">
+                <div
+                  v-for="(deferred, index) in results.deferredReasons"
+                  :key="index"
+                  class="p-4 bg-amber-50 border border-amber-200 rounded-lg"
+                >
+                  <h3 class="font-semibold text-amber-900 mb-2">{{ deferred.condition }}</h3>
+                  <p class="text-amber-800">{{ deferred.reason }}</p>
+                </div>
+              </div>
             </div>
+
+            <!-- Decision Timeline -->
+            <DecisionTimeline
+              :decision-date="results.decisionDate"
+              :effective-date="results.effectiveDate"
+              :appeal-deadline="results.appealDeadline"
+              :current-step="'decision_received'"
+            />
+
+            <!-- Evidence Checklist -->
+            <EvidenceChecklist
+              :conditions="getDeniedConditions(results)"
+              :claim-type="'appeal'"
+            />
+
+            <!-- Condition Comparison -->
+            <ConditionComparison
+              v-if="results.denialReasons?.length > 1"
+              :conditions="getConditionComparisonData(results)"
+            />
+          </div>
+
+          <!-- Right Column - Sticky Sidebar -->
+          <div class="lg:col-span-1">
+            <ComprehensiveNextStepsPanel
+              :comprehensive-next-steps="results.comprehensiveNextSteps"
+              :sticky="true"
+            />
           </div>
         </div>
 
-        <!-- Denial Reasons -->
-        <div v-if="results.denialReasons?.length > 0" class="bg-white rounded-2xl shadow-xl p-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">Denial Reasons</h2>
-          <div class="space-y-4">
-            <div
-              v-for="(denial, index) in results.denialReasons"
-              :key="index"
-              class="p-4 bg-orange-50 border border-orange-200 rounded-lg"
-            >
-              <h3 class="font-semibold text-gray-900 mb-2">{{ denial.condition }}</h3>
-              <p class="text-gray-700">{{ denial.laymanReason }}</p>
-              <p class="text-sm text-gray-500 mt-2">Category: {{ denial.category }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex gap-4">
-          <button
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <Button
             @click="reset"
-            class="flex-1 px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors"
+            variant="secondary"
           >
+            <Icon name="heroicons:document" class="w-4 h-4 mr-2" />
             Analyze Another Letter
-          </button>
-          <button
-            class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+          </Button>
+          
+          <Button
+            variant="primary"
+            @click="printReport"
           >
-            Get Help with Appeal
-          </button>
+            <Icon name="heroicons:printer" class="w-4 h-4 mr-2" />
+            Print Report
+          </Button>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue';
+<script setup lang="ts">
+import Badge from '~/components/atoms/Badge.vue'
+import Button from '~/components/atoms/Button.vue'
+import FileUploadZone from '~/components/organisms/FileUploadZone.vue'
+import AnalysisLoadingState from '~/components/organisms/AnalysisLoadingState.vue'
+import VeteranInfoCard from '~/components/molecules/VeteranInfoCard.vue'
+import DecisionSummarySection from '~/components/organisms/DecisionSummarySection.vue'
+import DenialAnalysisCard from '~/components/organisms/DenialAnalysisCard.vue'
+import ComprehensiveNextStepsPanel from '~/components/organisms/ComprehensiveNextStepsPanel.vue'
+import DecisionTimeline from '~/components/molecules/DecisionTimeline.vue'
+import EvidenceChecklist from '~/components/organisms/EvidenceChecklist.vue'
+import ConditionComparison from '~/components/organisms/ConditionComparison.vue'
 
-const config = useRuntimeConfig();
-const apiUrl = config.public.apiUrl;
+const config = useRuntimeConfig()
+const apiUrl = config.public.apiUrl
 
-const selectedFile = ref(null);
-const dragover = ref(false);
-const uploading = ref(false);
-const analyzing = ref(false);
-const results = ref(null);
-const error = ref('');
+// State
+const selectedFile = ref<File | null>(null)
+const uploading = ref(false)
+const analyzing = ref(false)
+const processing = ref(false)
+const results = ref<any>(null)
+const error = ref<string | null>(null)
 
+// Computed
+const currentStage = computed(() => {
+  if (uploading.value) return 'uploading'
+  if (analyzing.value) return 'analyzing'
+  if (processing.value) return 'processing'
+  return 'uploading'
+})
+
+// Head
 useHead({
   title: 'VA Decision Letter Analysis - FormReady',
   meta: [
     { name: 'description', content: 'Upload and analyze your VA decision letter to understand your claim decision' }
   ]
-});
+})
 
-function handleDrop(e) {
-  dragover.value = false;
-  const files = e.dataTransfer.files;
-  if (files.length > 0 && files[0].type === 'application/pdf') {
-    selectedFile.value = files[0];
-    error.value = '';
+// Methods
+const handleFileSelect = (file: File | null) => {
+  if (file) {
+    selectedFile.value = file
+    error.value = null
   } else {
-    error.value = 'Please upload a PDF file';
+    error.value = 'Please upload a PDF file'
   }
 }
 
-function handleFileSelect(e) {
-  const files = e.target.files;
-  if (files.length > 0) {
-    selectedFile.value = files[0];
-    error.value = '';
-  }
-}
+const analyzeDecision = async () => {
+  if (!selectedFile.value) return
 
-function formatFileSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-}
-
-function decisionClass(decision) {
-  switch (decision) {
-    case 'granted':
-      return 'border-green-200 bg-green-50';
-    case 'deferred':
-      return 'border-orange-200 bg-orange-50';
-    case 'denied':
-      return 'border-red-200 bg-red-50';
-    default:
-      return 'border-gray-200 bg-white';
-  }
-}
-
-async function analyzeDecision() {
-  if (!selectedFile.value) return;
-
-  uploading.value = true;
-  error.value = '';
+  uploading.value = true
+  error.value = null
 
   try {
     // 1. Get presigned upload URL
@@ -229,13 +194,13 @@ async function analyzeDecision() {
         contentType: selectedFile.value.type,
         path: 'decisions'
       })
-    });
+    })
 
     if (!presignedResponse.ok) {
-      throw new Error('Failed to get upload URL');
+      throw new Error('Failed to get upload URL')
     }
 
-    const { uploadUrl, s3Key, fileId } = await presignedResponse.json();
+    const { uploadUrl, s3Key, fileId } = await presignedResponse.json()
 
     // 2. Upload directly to S3 using presigned URL
     const s3Response = await fetch(uploadUrl, {
@@ -244,17 +209,23 @@ async function analyzeDecision() {
       headers: {
         'Content-Type': selectedFile.value.type
       }
-    });
+    })
 
     if (!s3Response.ok) {
-      throw new Error('Upload to S3 failed');
+      throw new Error('Upload to S3 failed')
     }
 
-    uploading.value = false;
-    analyzing.value = true;
+    // Artificial delay to show upload progress
+    await new Promise(resolve => setTimeout(resolve, 2000))
+
+    uploading.value = false
+    analyzing.value = true
+
+    // Artificial delay to show analysis progress
+    await new Promise(resolve => setTimeout(resolve, 3000))
 
     // 3. Trigger Python extraction service via API proxy
-    const documentId = `decision-${Date.now()}`;
+    const documentId = `decision-${Date.now()}`
     const extractResponse = await fetch(`${apiUrl}/v1/va-knowledge/extract-from-s3`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -263,31 +234,131 @@ async function analyzeDecision() {
         storageUrl: s3Key,
         skipCache: true  // Always force re-extraction to get latest improvements
       })
-    });
+    })
 
     if (!extractResponse.ok) {
-      throw new Error('Analysis failed');
+      throw new Error('Analysis failed')
     }
 
-    const extractData = await extractResponse.json();
-    analyzing.value = false;
+    const extractData = await extractResponse.json()
+    analyzing.value = false
+    processing.value = true
+
+    // Artificial delay to show processing progress
+    await new Promise(resolve => setTimeout(resolve, 2000))
+
+    processing.value = false
 
     // Display results
-    results.value = extractData;
+    results.value = extractData
 
-  } catch (err) {
-    console.error('Analysis error:', err);
-    error.value = err.message || 'Failed to analyze decision letter. Please try again.';
-    uploading.value = false;
-    analyzing.value = false;
+  } catch (err: any) {
+    console.error('Analysis error:', err)
+    error.value = err.message || 'Failed to analyze decision letter. Please try again.'
+    uploading.value = false
+    analyzing.value = false
+    processing.value = false
   }
 }
 
-function reset() {
-  selectedFile.value = null;
-  uploading.value = false;
-  analyzing.value = false;
-  results.value = null;
-  error.value = '';
+const reset = () => {
+  selectedFile.value = null
+  uploading.value = false
+  analyzing.value = false
+  processing.value = false
+  results.value = null
+  error.value = null
+}
+
+const printReport = () => {
+  window.print()
+}
+
+// Helper functions for new components
+const getDeniedConditions = (results: any): string[] => {
+  if (!results.denialReasons) return []
+  return results.denialReasons.map((denial: any) => denial.condition)
+}
+
+const getConditionComparisonData = (results: any) => {
+  if (!results.denialReasons) return []
+  
+  return results.denialReasons.map((denial: any, index: number) => ({
+    id: denial.condition.toLowerCase().replace(/\s+/g, '-'),
+    name: denial.condition,
+    category: getConditionCategory(denial.condition),
+    icon: getConditionIcon(denial.condition),
+    color: getConditionColor(denial.condition),
+    difficulty: getConditionDifficulty(denial.condition),
+    successRate: getConditionSuccessRate(denial.condition),
+    evidenceStrength: getEvidenceStrength(denial.condition),
+    timeline: getConditionTimeline(denial.condition),
+    priority: getConditionPriority(denial.condition),
+    denialReason: denial.reason
+  }))
+}
+
+// Helper functions for condition data
+function getConditionCategory(condition: string): string {
+  const mentalHealth = ['PTSD', 'Depression', 'Anxiety', 'Bipolar']
+  const auditory = ['Tinnitus', 'Hearing Loss']
+  const musculoskeletal = ['Back Pain', 'Knee Pain', 'Shoulder Pain']
+  
+  if (mentalHealth.some(c => condition.toLowerCase().includes(c.toLowerCase()))) return 'Mental Health'
+  if (auditory.some(c => condition.toLowerCase().includes(c.toLowerCase()))) return 'Auditory'
+  if (musculoskeletal.some(c => condition.toLowerCase().includes(c.toLowerCase()))) return 'Musculoskeletal'
+  return 'Other'
+}
+
+function getConditionIcon(condition: string): string {
+  if (condition.toLowerCase().includes('ptsd') || condition.toLowerCase().includes('depression')) return 'heart'
+  if (condition.toLowerCase().includes('tinnitus') || condition.toLowerCase().includes('hearing')) return 'speaker-wave'
+  if (condition.toLowerCase().includes('back') || condition.toLowerCase().includes('knee')) return 'user'
+  return 'medical-symbol'
+}
+
+function getConditionColor(condition: string): string {
+  if (condition.toLowerCase().includes('ptsd') || condition.toLowerCase().includes('depression')) return 'red-600'
+  if (condition.toLowerCase().includes('tinnitus') || condition.toLowerCase().includes('hearing')) return 'blue-600'
+  if (condition.toLowerCase().includes('back') || condition.toLowerCase().includes('knee')) return 'green-600'
+  return 'slate-600'
+}
+
+function getConditionDifficulty(condition: string): number {
+  // Simple heuristic based on condition type
+  if (condition.toLowerCase().includes('tinnitus')) return 2 // Easy
+  if (condition.toLowerCase().includes('ptsd')) return 3 // Medium
+  if (condition.toLowerCase().includes('back') || condition.toLowerCase().includes('knee')) return 4 // Hard
+  return 3 // Default medium
+}
+
+function getConditionSuccessRate(condition: string): number {
+  // Simple heuristic based on condition type
+  if (condition.toLowerCase().includes('tinnitus')) return 85
+  if (condition.toLowerCase().includes('ptsd')) return 75
+  if (condition.toLowerCase().includes('back') || condition.toLowerCase().includes('knee')) return 60
+  return 70
+}
+
+function getEvidenceStrength(condition: string): number {
+  // Simple heuristic - in real implementation, this would come from MCP analysis
+  if (condition.toLowerCase().includes('tinnitus')) return 3
+  if (condition.toLowerCase().includes('ptsd')) return 2
+  if (condition.toLowerCase().includes('back') || condition.toLowerCase().includes('knee')) return 1
+  return 2
+}
+
+function getConditionTimeline(condition: string): string {
+  if (condition.toLowerCase().includes('tinnitus')) return '3-6 months'
+  if (condition.toLowerCase().includes('ptsd')) return '6-12 months'
+  if (condition.toLowerCase().includes('back') || condition.toLowerCase().includes('knee')) return '12-18 months'
+  return '6-12 months'
+}
+
+function getConditionPriority(condition: string): 'high' | 'medium' | 'low' {
+  if (condition.toLowerCase().includes('tinnitus')) return 'high'
+  if (condition.toLowerCase().includes('ptsd')) return 'high'
+  if (condition.toLowerCase().includes('back') || condition.toLowerCase().includes('knee')) return 'medium'
+  return 'medium'
 }
 </script>
