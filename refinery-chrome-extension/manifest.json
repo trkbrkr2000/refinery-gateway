@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "ClaimReady VA Tracker",
+  "version": "1.0.0",
+  "description": "Sync your VA.gov profile with ClaimReady for advanced claim tracking and analytics",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.va.gov/*",
+    "https://eauth.va.gov/*",
+    "https://api.claimready.io/*"
+  ],
+  "background": {
+    "service_worker": "dist/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.va.gov/*"],
+      "js": ["dist/content.js"],
+      "css": ["content.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ClaimReady VA Tracker",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["https://www.va.gov/*"]
+    }
+  ]
+}

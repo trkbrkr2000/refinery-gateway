@@ -10,7 +10,6 @@
       <Badge 
         :variant="decision" 
         :text="decision.toUpperCase()"
-        size="sm"
       />
     </div>
     

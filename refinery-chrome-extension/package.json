@@ -1,0 +1,16 @@
+{
+  "name": "formready-va-tracker",
+  "version": "1.0.0",
+  "description": "Chrome extension for syncing VA.gov profile with FormReady",
+  "scripts": {
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "cp -r src/*.html src/*.css src/*.js dist/ 2>/dev/null || true",
+    "watch": "tsc --watch",
+    "dev": "npm run build && npm run watch"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.254",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {}
+}

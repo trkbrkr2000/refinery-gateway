@@ -4,7 +4,12 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   // Modules
-  modules: ['@nuxtjs/tailwindcss'],
+  modules: ['@nuxtjs/tailwindcss', '@nuxt/icon'],
+
+  // Icon configuration
+  icon: {
+    collections: ['heroicons']
+  },
 
   // Runtime config for environment variables
   runtimeConfig: {

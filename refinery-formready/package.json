@@ -2,6 +2,7 @@
   "name": "refinery-formready",
   "type": "module",
   "private": true,
+  "_deployment": "trigger-railway-deploy-2025-01-25",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -10,6 +11,8 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@iconify-json/heroicons": "^1.2.3",
+    "@nuxt/icon": "^2.1.0",
     "nuxt": "^4.1.3",
     "vue": "^3.5.22",
     "vue-router": "^4.6.3"

@@ -1,0 +1,206 @@
+# Refinery Project Context and Rules
+
+## Product Vision
+**Refinery** is a comprehensive VA benefits decision analysis and form generation platform designed to help veterans understand their disability rating decisions and take actionable next steps. The system processes VA decision letters, extracts key information, analyzes denial reasons, and generates personalized guidance for veterans to improve their claims.
+
+### Core Value Proposition
+- **Decision Analysis**: AI-powered analysis of VA decision letters to identify key information, ratings, and denials
+- **Evidence Guidance**: Personalized recommendations for missing evidence and next steps
+- **Form Generation**: Automated generation of forms and appeals based on decision analysis
+- **Knowledge Base**: Integration with VA regulations and CFR knowledge for accurate guidance
+
+## Project Overview
+This is a multi-service application for VA benefits decision analysis and form generation. The project consists of several interconnected services:
+
+### Core Services
+- **refinery-api**: NestJS backend API server (port 3001) - Main API for document processing, analysis, and form generation
+- **refinery-formready**: Nuxt.js frontend application (port 3000) - User interface for veterans to upload decisions and view analysis
+- **refinery-processor**: Document processing service - Handles PDF extraction and document parsing
+- **refinery-gateway**: API gateway service - Routes requests and manages authentication
+- **refinery-python**: Python services for document analysis - Advanced NLP and ML processing
+- **refinery-types**: Shared TypeScript types - Common interfaces across all services
+- **refinery-chrome-extension**: Browser extension for easy document capture
+- **refinery-docs**: Documentation and planning repository
+
+### Key Technologies
+- **Frontend**: Nuxt.js 4, Vue 3, Tailwind CSS, @nuxt/icon with Iconify
+- **Backend**: NestJS, MongoDB, Redis, Bull Queue
+- **AI/ML**: Groq LLM (Llama 3.3 70B), Python NLP services
+- **Storage**: S3-compatible storage (Railway), MongoDB for structured data
+- **Icons**: @nuxt/icon with @iconify-json/heroicons collection
+- **Package Manager**: yarn (preferred over npm/pnpm)
+
+### Repository Purposes
+- **refinery-api**: Core backend API with document processing, analysis, and form generation endpoints
+- **refinery-formready**: Veteran-facing web application for uploading decisions and viewing analysis results
+- **refinery-processor**: Document extraction and parsing service using advanced PDF processing
+- **refinery-gateway**: API gateway for routing, authentication, and request management
+- **refinery-python**: Python-based NLP and machine learning services for document analysis
+- **refinery-types**: Shared TypeScript interfaces and types across all services
+- **refinery-chrome-extension**: Browser extension for easy document capture from VA websites
+- **refinery-docs**: Project documentation, architecture decisions, and planning materials
+
+### Project Documentation Structure
+- **_docs/**: Product requirements, roadmaps, features, and planning documents
+- **_scripts/**: Development scripts, automation, and utility tools
+- **_test-data/**: Sample documents, test files, and development data
+- **logs/**: Application logs and debugging information
+- **_temp/**: Temporary files and development artifacts
+
+## Current Status (as of 2025-10-25)
+
+### ✅ Recently Resolved Issues
+1. **Icon System**: Migrated from Heroicons to Iconify (@nuxt/icon)
+   - All icons now use `heroicons:` prefix (e.g., `name="heroicons:star"`)
+   - Replaced `size` props with Tailwind classes (`w-4 h-4`, etc.)
+   - Fixed duplicate `class` attributes across components
+
+2. **Button Alignment**: Fixed pricing page button alignment using flexbox
+   - Added `flex flex-col` to cards, `flex-1` to content, `mt-auto` to buttons
+
+3. **CORS Issues**: Resolved file upload CORS errors
+   - API server properly running on port 3001
+   - Frontend running on port 3000
+   - Presigned upload endpoints working correctly
+
+### 🚀 Current Running Services
+- **API Server**: http://localhost:3001 (NestJS with MongoDB, Redis, Bull Queue)
+- **Frontend**: http://localhost:3000 (Nuxt.js with Tailwind CSS)
+- **File Upload**: Working with S3 presigned URLs
+- **Document Processing**: Active with Groq LLM integration
+
+### 📁 Key File Locations
+- **Frontend Config**: `refinery-formready/nuxt.config.ts`
+- **API Server**: `refinery-api/src/main.ts`
+- **Icon Components**: All use `<Icon name="heroicons:icon-name" />`
+- **Button Components**: `refinery-formready/components/atoms/Button.vue`
+
+## Development Rules
+
+### Icon Usage
+- Always use `heroicons:` prefix for icon names
+- Use Tailwind classes for sizing: `w-4 h-4`, `w-6 h-6`, etc.
+- Never use `size` prop on Icon components
+- Example: `<Icon name="heroicons:star" class="w-4 h-4" />`
+
+### Button Styling
+- Don't apply sizing classes to Button components themselves
+- Use Tailwind classes on internal Icon components only
+- Maintain consistent button alignment with flexbox
+
+### Service Management
+- Always start API server before frontend
+- Use `yarn` for package management
+- Kill all services before restarting to avoid port conflicts
+
+### File Upload Flow
+1. Frontend requests presigned URL from `/api/v1/storage/upload/presigned`
+2. Uploads file directly to S3 using presigned URL
+3. API processes document through extraction and analysis pipeline
+
+## Common Commands
+
+### Service Management
+```bash
+# Kill all services
+pkill -f "yarn dev" && pkill -f "nuxt dev" && pkill -f "ts-node" && pkill -f "nest"
+
+# Start API server
+cd refinery-api && npm run dev
+
+# Start frontend
+cd refinery-formready && yarn dev
+```
+
+### Port Usage
+- **3000**: Frontend (refinery-formready)
+- **3001**: API Server (refinery-api)
+- **3002**: Alternative API port (if 3001 is busy)
+- **3006**: Alternative frontend port (if 3000 is busy)
+
+## Architecture Notes
+
+### Document Processing Pipeline
+1. **Upload**: File uploaded via presigned S3 URL
+2. **Extraction**: Document content extracted and structured
+3. **Analysis**: Groq LLM analyzes decision letter content
+4. **Storage**: Results saved to MongoDB
+5. **Queue**: Bull Queue manages processing jobs
+
+### CORS Configuration
+- API server allows requests from `http://localhost:3000`
+- Presigned uploads work with S3 directly
+- No CORS issues with proper service startup order
+
+## Troubleshooting
+
+### Common Issues
+1. **Port Conflicts**: Kill all services before restarting
+2. **Icon Rendering**: Ensure `heroicons:` prefix and correct Tailwind classes
+3. **CORS Errors**: Verify API server is running on port 3001
+4. **Button Sizing**: Check for incorrect classes on Button components
+
+### Debug Steps
+1. Check service status: `lsof -ti :3000 :3001`
+2. Test API health: `curl http://localhost:3001/health`
+3. Test upload endpoint: `curl -X POST http://localhost:3001/api/v1/storage/upload/presigned`
+4. Clear browser cache for frontend issues
+
+## Future Considerations
+- Monitor Groq API rate limits
+- Consider Redis connection pooling
+- Implement proper error handling for failed uploads
+- Add comprehensive logging for debugging
+
+## Brand Image Generation Prompt
+
+### Product Context
+**Refinery** is a VA benefits decision analysis platform that helps veterans understand their disability rating decisions and take actionable next steps. The system processes VA decision letters, extracts key information, analyzes denial reasons, and generates personalized guidance for veterans to improve their claims.
+
+### Brand Identity
+- **Mission**: Empowering veterans with AI-powered analysis of their VA benefits decisions
+- **Values**: Trust, accuracy, empowerment, veteran-focused
+- **Tone**: Professional, supportive, authoritative, accessible
+- **Visual Style**: Clean, modern, trustworthy, military-inspired but not overly formal
+
+### Required Images
+1. **Favicon** (16x16, 32x32, 48x48px): Simple, recognizable icon that works at small sizes
+2. **GitHub Banner** (1200x600px): Horizontal banner for GitHub repository header
+3. **Thumbnail** (400x300px): Square/rectangular image for social media, documentation, or presentations
+
+### Image Generation Prompt
+```
+Create professional, clean images for "Refinery" - a VA benefits decision analysis platform that helps veterans understand their disability rating decisions. The brand embodies trust, accuracy, and empowerment for veterans navigating the VA benefits system.
+
+**Visual Elements to Include:**
+- Modern, clean design with military-inspired but accessible aesthetics
+- Colors: Deep blues, professional grays, accent golds or greens
+- Icons: Document analysis, decision trees, checkmarks, shields, or geometric patterns
+- Typography: Clean, readable fonts
+- Mood: Professional, trustworthy, supportive, empowering
+
+**Style Guidelines:**
+- Avoid overly military or government aesthetics
+- Focus on analysis, decision-making, and guidance
+- Use clean lines and modern design principles
+- Ensure accessibility and readability
+- Convey trust and expertise without being intimidating
+
+**Specific Requirements:**
+- Favicon: Simple, recognizable symbol that works at 16x16px
+- GitHub Banner: Horizontal layout with space for text overlay, professional presentation
+- Thumbnail: Balanced composition suitable for social media and documentation
+
+**Avoid:**
+- Overly complex designs
+- Military clichés (eagles, flags, etc.)
+- Government bureaucracy aesthetics
+- Cluttered or busy layouts
+- Colors that don't convey trust (reds, oranges for primary colors)
+```
+
+### Usage Notes
+- All images should be scalable and work across different contexts
+- Maintain consistent brand identity across all image types
+- Consider accessibility for colorblind users
+- Ensure images work on both light and dark backgrounds where applicable
