@@ -31,7 +31,7 @@ interface VeteranInfo {
 }
 
 class ClaimReadyTracker {
-  private apiBaseUrl: string = 'https://api.claimready.io/v1';
+  private apiBaseUrl: string = 'https://api.claimready.io';
   private isConnected: boolean = false;
   private isSyncing: boolean = false;
   private lastSync: string = 'Never';
