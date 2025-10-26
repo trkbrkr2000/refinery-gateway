@@ -22,15 +22,15 @@ export class GatewayService {
     }
 
     // Build target URL
-    // Gateway route: /api/forms/* -> Backend route: /api/v1/forms/*
-    // Gateway route: /api/va-knowledge/* -> Backend route: /api/v1/va-knowledge/*
+    // Gateway route: /api/forms/* -> Backend route: /api/forms/*
+    // Gateway route: /api/va-knowledge/* -> Backend route: /api/va-knowledge/*
     let targetPath = req.path;
     if (targetPath.startsWith('/api/forms')) {
-      targetPath = targetPath.replace('/api/forms', '/api/v1/forms');
+      targetPath = targetPath.replace('/api/forms', '/api/forms');
     } else if (targetPath.startsWith('/api/va-knowledge')) {
-      targetPath = targetPath.replace('/api/va-knowledge', '/api/v1/va-knowledge');
+      targetPath = targetPath.replace('/api/va-knowledge', '/api/va-knowledge');
     } else if (targetPath.startsWith('/api/processor')) {
-      targetPath = targetPath.replace('/api/processor', '/api/v1/processor');
+      targetPath = targetPath.replace('/api/processor', '/api/processor');
     }
     const targetUrl = `${serviceUrl}${targetPath}`;
 

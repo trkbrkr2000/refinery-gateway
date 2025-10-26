@@ -52,7 +52,7 @@ export class GatewayController {
     return this.proxyRequest(req, res, 'PROCESSOR_SERVICE_URL');
   }
 
-  @All('api/v1/*')
+  @All('api/*')
   async proxyApiV1(@Req() req: Request, @Res() res: Response) {
     return this.proxyRequest(req, res, 'VA_KNOWLEDGE_SERVICE_URL');
   }
