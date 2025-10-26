@@ -11,7 +11,7 @@ export const useApi = () => {
   const getApiUrl = (endpoint: string = '') => {
     let baseUrl = config.public.apiUrl
     if (window.location.hostname === 'claimready.io') {
-      baseUrl = 'https://api.claimready.io'
+      baseUrl = 'https://api.claimready.io/api/v1'
     }
 
     // Normalize endpoint to start with /
