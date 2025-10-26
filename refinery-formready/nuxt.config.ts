@@ -15,6 +15,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:3001/api',
+      authorizerUrl: process.env.NUXT_PUBLIC_AUTHORIZER_URL || 'https://auth.claimready.io',
+      authorizerClientId: process.env.NUXT_PUBLIC_AUTHORIZER_CLIENT_ID || '9c81da5e-0635-43c5-bcef-c629174c7c6f',
+      authorizerRedirectUrl: process.env.NUXT_PUBLIC_AUTHORIZER_REDIRECT_URL || 'http://localhost:3000',
     }
   },
 

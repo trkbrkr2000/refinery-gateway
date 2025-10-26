@@ -293,12 +293,8 @@ onMounted(async () => {
 
   try {
     // Fetch user profile from API
-    const response = await fetch('http://localhost:3001/auth/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
+    const { apiCall } = useApi()
+    const response = await apiCall('/auth/profile')
 
     if (!response.ok) {
       throw new Error('Authentication failed')
@@ -324,13 +320,8 @@ onMounted(async () => {
 // Load recent analysis from API
 const loadRecentAnalysis = async () => {
   try {
-    const token = localStorage.getItem('auth_token')
-    const response = await fetch('http://localhost:3001/documents/user', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
+    const { apiCall } = useApi()
+    const response = await apiCall('/documents/user')
 
     if (response.ok) {
       const data = await response.json()
@@ -349,13 +340,8 @@ const loadRecentAnalysis = async () => {
 // Load analytics for premium users
 const loadAnalytics = async () => {
   try {
-    const token = localStorage.getItem('auth_token')
-    const response = await fetch('http://localhost:3001/documents/analytics', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
+    const { apiCall } = useApi()
+    const response = await apiCall('/documents/analytics')
 
     if (response.ok) {
       const data = await response.json()
@@ -369,16 +355,8 @@ const loadAnalytics = async () => {
 // Logout handler
 const handleLogout = async () => {
   try {
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      await fetch('http://localhost:3001/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-    }
+    const { apiCall } = useApi()
+    await apiCall('/auth/logout', { method: 'POST' })
   } catch (error) {
     console.error('Logout error:', error)
   } finally {

@@ -240,10 +240,10 @@ const handleSignup = async () => {
   error.value = null
 
   try {
-    // Create user account
-    const response = await fetch('http://localhost:3001/auth/signup', {
+    // Use API composable for consistent URL handling
+    const { apiCall } = useApi()
+    const response = await apiCall('/auth/signup', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form)
     })
 

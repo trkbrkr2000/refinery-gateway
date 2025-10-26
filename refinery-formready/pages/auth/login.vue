@@ -182,10 +182,10 @@ const handleLogin = async () => {
   error.value = null
 
   try {
-    // Simple login authentication (in production, use proper auth)
-    const response = await fetch('http://localhost:3001/auth/login', {
+    // Use API composable for consistent URL handling
+    const { apiCall } = useApi()
+    const response = await apiCall('/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form)
     })
 
