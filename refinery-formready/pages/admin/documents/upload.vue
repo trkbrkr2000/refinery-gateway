@@ -413,7 +413,7 @@ const handleUpload = async () => {
     if (metadata.url) formData.append('url', metadata.url)
     if (selectedTags.value.length > 0) formData.append('tags', selectedTags.value.join(','))
 
-    const response = await fetch('/api/v1/va-knowledge/upload', {
+    const response = await fetch('/api/va-knowledge/upload', {
       method: 'POST',
       body: formData
     })

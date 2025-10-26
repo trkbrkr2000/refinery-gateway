@@ -303,7 +303,7 @@ onMounted(async () => {
 // Load statistics
 const loadStats = async () => {
   try {
-    const response = await fetch('/api/v1/va-law/ingest/stats')
+    const response = await fetch('/api/va-law/ingest/stats')
     const data = await response.json()
     
     if (data.success) {

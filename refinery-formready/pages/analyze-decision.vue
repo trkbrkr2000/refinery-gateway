@@ -218,7 +218,7 @@ const analyzeDecision = async () => {
   try {
     // 1. Get presigned upload URL
     const token = localStorage.getItem('auth_token');
-    const presignedResponse = await fetch(`${apiUrl}/v1/storage/upload/presigned`, {
+    const presignedResponse = await fetch(`${apiUrl}/storage/upload/presigned`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -261,7 +261,7 @@ const analyzeDecision = async () => {
 
     // 3. Trigger Python extraction service via API proxy
     const documentId = `decision-${Date.now()}`;
-    const extractResponse = await fetch(`${apiUrl}/v1/va-knowledge/extract-from-s3`, {
+    const extractResponse = await fetch(`${apiUrl}/va-knowledge/extract-from-s3`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",

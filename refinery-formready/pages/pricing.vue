@@ -322,6 +322,6 @@ const handleUpgrade = () => {
   }
 
   // Redirect to Stripe checkout
-  window.location.href = '/api/v1/billing/checkout'
+  window.location.href = '/api/billing/checkout'
 }
 </script>
