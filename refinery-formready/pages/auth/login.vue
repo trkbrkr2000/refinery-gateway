@@ -1,4 +1,5 @@
 <template>
+  <!-- Updated: 2025-10-26 - Force Railway rebuild -->
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <!-- Patriotic Background Pattern -->
     <div class="absolute inset-0 overflow-hidden">
@@ -178,6 +179,7 @@ const error = ref<string | null>(null)
 
 // Login handler
 const handleLogin = async () => {
+  console.log('🔧 LOGIN: Force rebuild 2025-10-26 - API URL should be api.claimready.io')
   loading.value = true
   error.value = null
 

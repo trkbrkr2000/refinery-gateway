@@ -321,7 +321,7 @@ onMounted(async () => {
 const loadRecentAnalysis = async () => {
   try {
     const { apiCall } = useApi()
-    const response = await apiCall('/documents/user')
+    const response = await apiCall('/documents')
 
     if (response.ok) {
       const data = await response.json()

@@ -2,9 +2,9 @@
   "name": "refinery-formready",
   "type": "module",
   "private": true,
-  "_deployment": "trigger-railway-deploy-2025-01-25",
+  "_deployment": "trigger-railway-deploy-2025-10-26-force-rebuild",
   "scripts": {
-    "build": "nuxt build",
+    "build": "echo 'FORCE REBUILD 2025-10-26' && nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

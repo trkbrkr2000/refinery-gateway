@@ -1,0 +1,4 @@
+RAILWAY FORCE REBUILD - 2025-10-26
+This file should trigger a Railway deployment
+API URL should be: api.claimready.io
+Current malformed URL: claimready.io/.claimready.io

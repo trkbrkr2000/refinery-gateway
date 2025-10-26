@@ -217,9 +217,13 @@ const analyzeDecision = async () => {
 
   try {
     // 1. Get presigned upload URL
+    const token = localStorage.getItem('auth_token');
     const presignedResponse = await fetch(`${apiUrl}/v1/storage/upload/presigned`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token && { "Authorization": `Bearer ${token}` })
+      },
       body: JSON.stringify({
         fileName: selectedFile.value.name,
         contentType: selectedFile.value.type,
@@ -259,7 +263,10 @@ const analyzeDecision = async () => {
     const documentId = `decision-${Date.now()}`;
     const extractResponse = await fetch(`${apiUrl}/v1/va-knowledge/extract-from-s3`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token && { "Authorization": `Bearer ${token}` })
+      },
       body: JSON.stringify({
         documentId: documentId,
         storageUrl: s3Key,

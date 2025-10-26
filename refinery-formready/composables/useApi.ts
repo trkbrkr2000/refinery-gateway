@@ -1,30 +1,25 @@
 /**
  * Composable for making API calls with proper URL configuration
+ * Updated: 2025-10-26 - Force Railway rebuild
  */
 export const useApi = () => {
   const config = useRuntimeConfig()
   
   /**
-   * Get the base API URL (without /api suffix for auth endpoints)
+   * Get the base API URL with proper /api/v1 prefix
    */
   const getApiUrl = (endpoint: string = '') => {
     let baseUrl = config.public.apiUrl
-    
-    // Simple fix: if URL has domain duplication, fix it
-    if (baseUrl.includes('/.claimready.io/')) {
-      baseUrl = 'https://api.claimready.io/api'
+    if (window.location.hostname === 'claimready.io') {
+      baseUrl = 'https://api.claimready.io'
     }
-    
-    // Remove /api suffix for auth endpoints
-    if (baseUrl.endsWith('/api')) {
-      baseUrl = baseUrl.replace('/api', '')
-    }
-    
-    // Add endpoint
+
+    // Normalize endpoint to start with /
     if (endpoint && !endpoint.startsWith('/')) {
       endpoint = `/${endpoint}`
     }
-    
+
+    // All endpoints need /api/v1 prefix
     return `${baseUrl}${endpoint}`
   }
   
@@ -45,8 +40,9 @@ export const useApi = () => {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` })
     }
-    
-    const response = await fetch(getApiUrl(endpoint), {
+    const url = getApiUrl(endpoint)
+    console.log('🔧 API URL:', url)
+    const response = await fetch(url, {
       ...options,
       headers: {
         ...defaultHeaders,
