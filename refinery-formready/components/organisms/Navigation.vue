@@ -188,6 +188,8 @@
 </template>
 
 <script setup lang="ts">
+import Button from "~/components/atoms/Button.vue";
+
 interface Props {
   showNewAnalysis?: boolean
   showDashboard?: boolean

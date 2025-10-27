@@ -24,7 +24,7 @@
       />
 
       <div v-if="!selectedFile">
-        <Icon name="document" class="w-8 h-8 mx-auto mb-4" color="slate-400" />
+        <Icon name="heroicons:document" class="w-8 h-8 mx-auto mb-4" color="slate-400" />
         <p class="text-lg text-slate-700 mb-2">Drop your decision letter here or click to browse</p>
         <p class="text-sm text-slate-500">PDF files only</p>
       </div>

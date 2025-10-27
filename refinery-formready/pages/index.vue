@@ -76,7 +76,7 @@
         <div class="grid gap-6 md:grid-cols-1">
           <!-- Decision Analysis Card -->
           <NuxtLink
-            to="/analyze-decision"
+            to="/analyze"
             class="group block p-8 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-l-4 border-blue-800"
           >
             <div class="flex items-start justify-between">

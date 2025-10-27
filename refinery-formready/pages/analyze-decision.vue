@@ -158,8 +158,11 @@
 <script setup lang="ts">
 import Badge from "~/components/atoms/Badge.vue";
 import Button from "~/components/atoms/Button.vue";
+import Navigation from "~/components/organisms/Navigation.vue";
 import FileUploadZone from "~/components/organisms/FileUploadZone.vue";
 import AnalysisLoadingState from "~/components/organisms/AnalysisLoadingState.vue";
+import ExecutiveSummary from "~/components/organisms/ExecutiveSummary.vue";
+import RecommendedActions from "~/components/organisms/RecommendedActions.vue";
 import VeteranInfoCard from "~/components/molecules/VeteranInfoCard.vue";
 import DecisionSummarySection from "~/components/organisms/DecisionSummarySection.vue";
 import DenialAnalysisCard from "~/components/organisms/DenialAnalysisCard.vue";
@@ -268,7 +271,7 @@ const analyzeDecision = async () => {
         ...(token && { "Authorization": `Bearer ${token}` })
       },
       body: JSON.stringify({
-        documentId: documentId,
+        documentId: fileId,
         storageUrl: s3Key,
         skipCache: true, // Always force re-extraction to get latest improvements
       }),
