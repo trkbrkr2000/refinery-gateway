@@ -4,14 +4,12 @@
     <header class="bg-white shadow-sm">
       <div class="max-w-7xl mx-auto px-4 py-4">
         <div class="flex justify-between items-center">
-          <NuxtLink to="/" class="text-xl font-bold text-blue-800">
-            ClaimReady
-          </NuxtLink>
+          <Logo size="md" to="/" />
           <div class="flex items-center space-x-4">
-            <NuxtLink to="/analyze" class="text-sm text-blue-600">
+            <NuxtLink to="/analyze" class="text-sm text-slate-600 hover:text-blue-800 transition-colors">
               Analyze Another
             </NuxtLink>
-            <NuxtLink to="/auth/signup" class="text-sm text-blue-600">
+            <NuxtLink to="/auth/signup" class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
               Sign Up Free
             </NuxtLink>
           </div>
@@ -40,78 +38,80 @@
 
     <!-- Results -->
     <div v-else-if="results" class="max-w-7xl mx-auto px-4 py-8">
-      <!-- Decision Summary -->
-      <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
-        <h2 class="text-2xl font-bold text-slate-900 mb-4">Decision Summary</h2>
-        <div class="prose max-w-none">
-          <p class="text-slate-700">{{ results.summary || 'No summary available' }}</p>
-        </div>
-      </div>
+      <!-- Countdown Timer -->
+      <CountdownTimer
+        :expires-at="expirationDate"
+        @show-signup="navigateTo('/auth/signup')"
+      />
 
-      <!-- Conditions -->
-      <div v-if="results.conditions && results.conditions.length > 0" class="bg-white rounded-xl shadow-lg p-8 mb-8">
-        <h2 class="text-2xl font-bold text-slate-900 mb-6">Conditions & Ratings</h2>
-        <div class="space-y-4">
-          <div 
-            v-for="condition in results.conditions" 
-            :key="condition.condition"
-            class="flex items-center justify-between p-4 bg-slate-50 rounded-lg"
-          >
-            <div>
-              <h3 class="font-semibold text-slate-900">{{ condition.condition }}</h3>
-              <p class="text-sm text-slate-600">{{ condition.status }}</p>
-            </div>
-            <div v-if="condition.rating" class="text-right">
-              <span class="text-lg font-bold text-blue-600">{{ condition.rating }}%</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Rating Hero Card -->
+      <RatingHeroCard
+        :combined-rating="results.combinedRating || 0"
+        :monthly-payment="results.monthlyPayment || 0"
+        :granted-count="grantedCount"
+        :denied-count="deniedCount"
+        :deferred-count="deferredCount"
+      />
 
-      <!-- Denial Analysis -->
-      <div v-if="results.denialReasons && results.denialReasons.length > 0" class="bg-white rounded-xl shadow-lg p-8 mb-8">
-        <h2 class="text-2xl font-bold text-slate-900 mb-6">Denial Analysis</h2>
-        <div class="space-y-6">
-          <div 
-            v-for="denial in results.denialReasons" 
-            :key="denial.condition"
-            class="border-l-4 border-red-200 pl-6"
-          >
-            <h3 class="text-lg font-semibold text-slate-900 mb-2">{{ denial.condition }}</h3>
-            <p class="text-slate-700">{{ denial.reason || 'No reason provided' }}</p>
-          </div>
-        </div>
-      </div>
-      
+      <!-- Conditions Grid Enhanced -->
+      <ConditionsGridEnhanced
+        :conditions="formattedConditions"
+        :denial-reasons="results.denialReasons || []"
+        :deferred-reasons="results.deferredReasons || []"
+        @show-signup="navigateTo('/auth/signup')"
+      />
+
+      <!-- Locked Feature Teaser -->
+      <LockedFeatureTeaser
+        @show-signup="navigateTo('/auth/signup')"
+      />
+
+      <!-- Free vs Paid Comparison -->
+      <FreeVsPaidGrid
+        @show-signup="navigateTo('/auth/signup')"
+      />
+
+      <!-- Social Proof (Hidden until we have real testimonials) -->
+      <!-- <SocialProof
+        @show-signup="navigateTo('/auth/signup')"
+      /> -->
+
       <!-- Actions -->
       <div class="mt-8 flex flex-col sm:flex-row gap-4">
         <Button @click="downloadSummary" variant="primary">
           <Icon name="heroicons:arrow-down-tray" class="w-4 h-4 mr-2" />
           Download Summary PDF
         </Button>
-        
+
         <Button @click="navigateTo('/auth/signup')" variant="secondary">
           <Icon name="heroicons:bookmark" class="w-4 h-4 mr-2" />
           Save Full Results (Sign Up Free)
         </Button>
-        
+
         <Button @click="navigateTo('/analyze')" variant="secondary">
           <Icon name="heroicons:document-plus" class="w-4 h-4 mr-2" />
           Analyze Another Document
         </Button>
       </div>
-      
-      <!-- Sign Up CTA -->
-      <div class="mt-12 bg-gradient-to-r from-blue-50 to-amber-50 rounded-xl p-8 text-center">
-        <h3 class="text-2xl font-bold text-slate-900 mb-4">
-          Want to save your analysis?
+
+      <!-- Final CTA -->
+      <div class="mt-12 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl shadow-2xl p-12 text-center text-white">
+        <h3 class="text-3xl font-bold mb-4">
+          Ready to Take the Next Step?
         </h3>
-        <p class="text-slate-600 mb-6">
-          Create a free account to save all your analyses, track progress, and access premium features.
+        <p class="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
+          Join thousands of veterans who have successfully increased their ratings and secured the benefits they deserve.
         </p>
-        <Button @click="navigateTo('/auth/signup')" variant="primary" class="px-8">
-          Create Free Account
-        </Button>
+        <button
+          @click="navigateTo('/auth/signup')"
+          class="inline-flex items-center px-12 py-4 text-xl font-bold bg-white text-blue-700 rounded-xl hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg"
+        >
+          <Icon name="heroicons:rocket-launch" class="w-6 h-6 mr-2" />
+          Create Free Account Now
+        </button>
+        <p class="text-blue-200 text-sm mt-4">
+          No credit card required • Takes 30 seconds • 100% free forever
+        </p>
       </div>
     </div>
 
@@ -131,6 +131,13 @@
 
 <script setup lang="ts">
 import Button from "~/components/atoms/Button.vue";
+import Logo from "~/components/atoms/Logo.vue";
+import RatingHeroCard from "~/components/organisms/RatingHeroCard.vue";
+import ConditionsGridEnhanced from "~/components/organisms/ConditionsGridEnhanced.vue";
+import CountdownTimer from "~/components/organisms/CountdownTimer.vue";
+import LockedFeatureTeaser from "~/components/organisms/LockedFeatureTeaser.vue";
+import FreeVsPaidGrid from "~/components/organisms/FreeVsPaidGrid.vue";
+import SocialProof from "~/components/organisms/SocialProof.vue";
 
 const route = useRoute()
 const sessionId = route.params.sessionId as string
@@ -138,12 +145,50 @@ const sessionId = route.params.sessionId as string
 const loading = ref(true)
 const results = ref<any>(null)
 
+// Computed properties for condition counts and formatting
+const formattedConditions = computed(() => {
+  if (!results.value?.ratings) return []
+
+  return results.value.ratings.map((rating: any) => ({
+    condition: rating.condition,
+    decision: rating.decision || 'unknown',
+    ratingPercentage: rating.ratingPercentage,
+    effectiveDate: rating.effectiveDate,
+    reason: rating.reason
+  }))
+})
+
+const grantedCount = computed(() => {
+  return formattedConditions.value.filter((c: any) => c.decision === 'granted').length
+})
+
+const deniedCount = computed(() => {
+  return formattedConditions.value.filter((c: any) => c.decision === 'denied').length
+})
+
+const deferredCount = computed(() => {
+  return formattedConditions.value.filter((c: any) => c.decision === 'deferred').length
+})
+
+// Calculate expiration date (24 hours from creation)
+const expirationDate = computed(() => {
+  if (!results.value?.extractedAt) {
+    // Default to 24 hours from now if no extractedAt date
+    return new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+  }
+  const extracted = new Date(results.value.extractedAt)
+  return new Date(extracted.getTime() + 24 * 60 * 60 * 1000).toISOString()
+})
+
 onMounted(async () => {
   try {
+    const config = useRuntimeConfig()
+    const apiUrl = config.public.apiUrl || 'http://localhost:3001'
+
     const response = await fetch(
-      `http://localhost:3001/api/analyze/results/${sessionId}`
+      `${apiUrl}/api/analyze/results/${sessionId}`
     )
-    
+
     if (response.ok) {
       results.value = await response.json()
     }
@@ -155,8 +200,11 @@ onMounted(async () => {
 })
 
 const downloadSummary = async () => {
+  const config = useRuntimeConfig()
+  const apiUrl = config.public.apiUrl || 'http://localhost:3001'
+
   window.open(
-    `http://localhost:3001/api/analyze/results/${sessionId}/summary-pdf`,
+    `${apiUrl}/api/analyze/results/${sessionId}/summary-pdf`,
     '_blank'
   )
 }

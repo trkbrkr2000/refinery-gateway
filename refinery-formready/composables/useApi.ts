@@ -6,12 +6,12 @@ export const useApi = () => {
   const config = useRuntimeConfig()
   
   /**
-   * Get the base API URL with proper /api prefix
+   * Get the base API URL (without /api suffix - endpoints provide that)
    */
   const getApiUrl = (endpoint: string = '') => {
     let baseUrl = config.public.apiUrl
     if (window.location.hostname === 'claimready.io') {
-      baseUrl = 'https://api.claimready.io/api'
+      baseUrl = 'https://api.claimready.io'
     }
 
     // Normalize endpoint to start with /
@@ -19,7 +19,6 @@ export const useApi = () => {
       endpoint = `/${endpoint}`
     }
 
-    // All endpoints need /api prefix
     return `${baseUrl}${endpoint}`
   }
   

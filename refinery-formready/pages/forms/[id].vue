@@ -189,7 +189,7 @@ const progress = computed(() => {
 onMounted(async () => {
   try {
     const apiUrl = config.public.apiUrl
-    const response = await fetch(`${apiUrl}/forms/${formId}/schema`)
+    const response = await fetch(`${apiUrl}/api/forms/${formId}/schema`)
 
     if (!response.ok) {
       throw new Error(`Failed to load form: ${response.statusText}`)
@@ -224,7 +224,7 @@ async function generatePDF() {
 
   try {
     const apiUrl = config.public.apiUrl
-    const response = await fetch(`${apiUrl}/forms/${formId}/generate`, {
+    const response = await fetch(`${apiUrl}/api/forms/${formId}/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -8,7 +8,7 @@
             <div class="w-8 h-8 bg-blue-800 rounded-full flex items-center justify-center mr-3">
               <Icon name="heroicons:document-text" class="w-4 h-4 text-white" />
             </div>
-            <h1 class="text-xl font-bold text-blue-800">Refinery</h1>
+            <h1 class="text-xl font-bold text-blue-800">ClaimReady</h1>
           </NuxtLink>
         </div>
         
@@ -28,9 +28,9 @@
           >
             Analyze Decision
           </NuxtLink>
-          <NuxtLink 
-            v-if="showDashboard"
-            to="/dashboard" 
+          <NuxtLink
+            v-if="isAuthenticated"
+            to="/dashboard"
             class="text-slate-600 hover:text-blue-600 transition-colors font-medium"
             :class="{ 'text-blue-600': $route.path === '/dashboard' }"
           >
@@ -48,8 +48,8 @@
         <!-- Action Buttons -->
         <div class="flex items-center space-x-3">
           <!-- New Analysis Button -->
-          <Button 
-            v-if="showNewAnalysis"
+          <Button
+            v-if="isAuthenticated"
             @click="navigateTo('/analyze-decision')"
             variant="primary"
             class="flex items-center"
@@ -57,10 +57,10 @@
             <Icon name="heroicons:plus" class="w-4 h-4 mr-2" />
             New Analysis
           </Button>
-          
+
           <!-- Dashboard Button -->
-          <Button 
-            v-if="showDashboard"
+          <Button
+            v-if="isAuthenticated"
             @click="navigateTo('/dashboard')"
             variant="secondary"
             class="flex items-center"
@@ -70,8 +70,8 @@
           </Button>
           
           <!-- User Menu -->
-          <div class="relative" v-if="showUserMenu">
-            <Button 
+          <div class="relative" v-if="isAuthenticated">
+            <Button
               @click="toggleUserMenu"
               variant="outline"
               class="flex items-center"
@@ -80,27 +80,27 @@
               Account
               <Icon name="heroicons:chevron-down" class="w-4 h-4 ml-2" />
             </Button>
-            
+
             <!-- Dropdown Menu -->
             <div v-if="userMenuOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-              <NuxtLink 
-                to="/dashboard" 
+              <NuxtLink
+                to="/dashboard"
                 class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-gray-50"
                 @click="userMenuOpen = false"
               >
                 <Icon name="heroicons:chart-bar" class="w-4 h-4 mr-3" />
                 Dashboard
               </NuxtLink>
-              <NuxtLink 
-                to="/profile" 
+              <NuxtLink
+                to="/profile"
                 class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-gray-50"
                 @click="userMenuOpen = false"
               >
                 <Icon name="heroicons:user" class="w-4 h-4 mr-3" />
                 Profile
               </NuxtLink>
-              <NuxtLink 
-                to="/settings" 
+              <NuxtLink
+                to="/settings"
                 class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-gray-50"
                 @click="userMenuOpen = false"
               >
@@ -108,7 +108,7 @@
                 Settings
               </NuxtLink>
               <div class="border-t border-gray-200 my-2"></div>
-              <button 
+              <button
                 @click="handleLogout"
                 class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
               >
@@ -117,7 +117,7 @@
               </button>
             </div>
           </div>
-          
+
           <!-- Auth Buttons -->
           <div v-else class="flex items-center space-x-2">
             <Button 
@@ -166,9 +166,9 @@
           >
             Analyze Decision
           </NuxtLink>
-          <NuxtLink 
-            v-if="showDashboard"
-            to="/dashboard" 
+          <NuxtLink
+            v-if="isAuthenticated"
+            to="/dashboard"
             class="block px-3 py-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             @click="mobileMenuOpen = false"
           >
@@ -204,6 +204,21 @@ const props = withDefaults(defineProps<Props>(), {
 
 const userMenuOpen = ref(false)
 const mobileMenuOpen = ref(false)
+const isAuthenticated = ref(false)
+const route = useRoute()
+
+// Check authentication status
+const checkAuth = () => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('auth_token')
+    isAuthenticated.value = !!token
+  }
+}
+
+// Watch for route changes and re-check auth
+watch(() => route.path, () => {
+  checkAuth()
+})
 
 const toggleUserMenu = () => {
   userMenuOpen.value = !userMenuOpen.value
@@ -216,13 +231,16 @@ const toggleMobileMenu = () => {
 }
 
 const handleLogout = () => {
-  // Handle logout logic
-  console.log('Logout clicked')
+  localStorage.removeItem('auth_token')
+  isAuthenticated.value = false
   userMenuOpen.value = false
+  navigateTo('/auth/login')
 }
 
 // Close menus when clicking outside
 onMounted(() => {
+  checkAuth()
+
   const handleClickOutside = (event: MouseEvent) => {
     if (userMenuOpen.value || mobileMenuOpen.value) {
       const target = event.target as HTMLElement
@@ -232,9 +250,9 @@ onMounted(() => {
       }
     }
   }
-  
+
   document.addEventListener('click', handleClickOutside)
-  
+
   onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
   })

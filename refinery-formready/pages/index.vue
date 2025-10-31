@@ -4,14 +4,7 @@
     <header class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 py-4">
         <div class="flex justify-between items-center">
-          <div class="flex items-center">
-            <div class="w-8 h-8 bg-blue-800 rounded-full flex items-center justify-center mr-3">
-              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-            </div>
-            <h1 class="text-xl font-bold text-blue-800">ClaimReady</h1>
-          </div>
+          <Logo size="md" />
           
           <div class="flex items-center space-x-2">
             <Button 
@@ -44,26 +37,31 @@
       <!-- Hero Section -->
       <div class="text-center mb-16">
         <div class="flex items-center justify-center mb-6">
-          <div class="w-16 h-16 bg-blue-800 rounded-full flex items-center justify-center mr-4">
-            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <h1 class="text-6xl font-bold text-blue-800 mb-0">
-            ClaimReady
-          </h1>
+          <Logo size="xl" :show-text="false" />
         </div>
-        <p class="text-2xl text-gray-700 mb-4 font-semibold">
-          VA Claims Made Simple
+
+        <!-- Main Headline - Transformation Focused -->
+        <h1 class="text-6xl font-bold text-slate-900 mb-6 leading-tight">
+          Turn Denials Into
+          <span class="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent"> Approvals</span>
+        </h1>
+
+        <!-- Value Prop -->
+        <p class="text-2xl text-slate-700 mb-4 font-medium max-w-3xl mx-auto">
+          AI-Powered Decision Letter Analysis Built by Veterans
         </p>
-        <div class="flex items-center justify-center text-sm text-gray-600 mb-8">
-          <svg class="w-4 h-4 mr-2 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+
+        <!-- Social Proof Banner -->
+        <div class="inline-flex items-center bg-blue-50 border border-blue-200 rounded-full px-6 py-3 mb-8">
+          <svg class="w-5 h-5 mr-2 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
           </svg>
-          <span class="font-semibold text-blue-800">Made for Veterans by Veterans</span>
+          <span class="font-semibold text-blue-900">Veteran-Built • Bank-Level Security • 100% Free Tier</span>
         </div>
-        <p class="text-lg text-gray-500 max-w-2xl mx-auto">
-          Upload your VA decision letter for instant analysis, understand your claim decisions, and get personalized next steps to strengthen your case.
+
+        <!-- Supporting Copy -->
+        <p class="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          Get instant AI analysis of your VA decision letter. Understand exactly why claims were denied, what evidence you need, and your next steps to appeal—in minutes, not weeks.
         </p>
       </div>
 
@@ -225,11 +223,12 @@
 
 <script setup lang="ts">
 import Button from '~/components/atoms/Button.vue'
+import Logo from '~/components/atoms/Logo.vue'
 
 useHead({
-  title: 'ClaimReady - Made for Veterans by Veterans',
+  title: 'ClaimReady - Turn Denials Into Approvals',
   meta: [
-    { name: 'description', content: 'Built by veterans for veterans. Upload your VA decision letter for instant analysis and get personalized next steps to strengthen your case.' }
+    { name: 'description', content: 'AI-powered VA decision letter analysis built by veterans. Understand denials, identify missing evidence, and get your next steps—in minutes, not weeks.' }
   ]
 })
 </script>

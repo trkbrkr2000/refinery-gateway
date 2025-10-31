@@ -242,7 +242,7 @@ const handleSignup = async () => {
   try {
     // Use API composable for consistent URL handling
     const { apiCall } = useApi()
-    const response = await apiCall('/auth/signup', {
+    const response = await apiCall('/api/auth/signup', {
       method: 'POST',
       body: JSON.stringify(form)
     })

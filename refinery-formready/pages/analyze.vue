@@ -4,10 +4,8 @@
     <header class="bg-white shadow-sm">
       <div class="max-w-7xl mx-auto px-4 py-4">
         <div class="flex justify-between items-center">
-          <NuxtLink to="/" class="text-xl font-bold text-blue-800">
-            ClaimReady
-          </NuxtLink>
-          <NuxtLink to="/auth/login" class="text-sm text-slate-600">
+          <Logo size="md" to="/" />
+          <NuxtLink to="/auth/login" class="text-sm text-slate-600 hover:text-blue-800 transition-colors">
             Sign In
           </NuxtLink>
         </div>
@@ -39,6 +37,7 @@
 <script setup lang="ts">
 import FileUploadZone from "~/components/organisms/FileUploadZone.vue";
 import AnalysisLoadingState from "~/components/organisms/AnalysisLoadingState.vue";
+import Logo from "~/components/atoms/Logo.vue";
 
 const analyzing = ref(false)
 const sessionId = ref<string | null>(null)
@@ -50,16 +49,19 @@ const handleFileSelect = (file: File) => {
 
 const analyzeDocument = async () => {
   if (!selectedFile.value) return
-  
+
   analyzing.value = true
-  
+
   try {
+    const config = useRuntimeConfig()
+    const apiUrl = config.public.apiUrl || 'http://localhost:3001'
+
     console.log('Starting analysis for file:', selectedFile.value.name)
-    
+
     // 1. Upload to S3 (NEW anonymous presigned URL endpoint)
     console.log('Step 1: Getting presigned URL...')
     const presignedResponse = await fetch(
-      'http://localhost:3001/api/storage/upload/presigned/anonymous',
+      `${apiUrl}/api/storage/upload/presigned/anonymous`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,7 +96,7 @@ const analyzeDocument = async () => {
     // 3. Analyze (NEW anonymous endpoint)
     console.log('Step 3: Starting analysis...')
     const analyzeResponse = await fetch(
-      'http://localhost:3001/api/analyze/anonymous',
+      `${apiUrl}/api/analyze/anonymous`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
