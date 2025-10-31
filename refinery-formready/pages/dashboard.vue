@@ -30,19 +30,12 @@
             </div>
           </div>
           <div class="text-right">
-            <div v-if="!user.isPremium" class="mb-4">
-              <Button 
-                @click="navigateTo('/pricing')"
-                variant="primary"
-                class="bg-amber-500 hover:bg-amber-600 text-white"
-              >
-                <Icon name="heroicons:star" class="w-4 h-4 mr-2" />
-                Upgrade to Premium
-              </Button>
-            </div>
-            <div v-else class="flex items-center justify-end px-4 py-2 bg-white bg-opacity-20 rounded-lg mb-4">
-              <Icon name="heroicons:star" class="w-5 h-5 mr-2" />
-              <span class="font-medium">Premium Member</span>
+            <!-- Premium Coming Soon - Hidden for now -->
+            <div v-if="false" class="mb-4">
+              <div class="flex items-center justify-end px-4 py-2 bg-amber-400 bg-opacity-90 text-slate-900 rounded-lg mb-4">
+                <Icon name="heroicons:clock" class="w-5 h-5 mr-2" />
+                <span class="font-bold text-sm">Premium Coming Soon</span>
+              </div>
             </div>
             <Button @click="handleLogout" variant="secondary" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white border-white">
               <Icon name="heroicons:arrow-right-on-rectangle" class="w-4 h-4 mr-2" />
@@ -93,31 +86,19 @@
             </div>
           </div>
           
-          <div 
-            v-if="user.isPremium"
-            @click="navigateTo('/forms')"
-            class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer group border-2 border-transparent hover:border-purple-200"
-          >
-            <div class="p-8 text-center">
-              <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
-                <Icon name="heroicons:clipboard-document-list" class="w-8 h-8 text-purple-600" />
+          <!-- Premium Features Coming Soon -->
+          <div class="relative bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-lg border-2 border-amber-200 opacity-75">
+            <div class="absolute top-4 right-4 z-10">
+              <div class="bg-amber-400 text-slate-900 font-bold text-xs px-3 py-1 rounded-full">
+                COMING SOON
               </div>
-              <h3 class="text-xl font-semibold text-slate-900 mb-2">Generate Forms</h3>
-              <p class="text-slate-600">Create appeals and supplemental claims</p>
             </div>
-          </div>
-          
-          <div 
-            v-else
-            @click="navigateTo('/pricing')"
-            class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer group border-2 border-transparent hover:border-amber-200"
-          >
             <div class="p-8 text-center">
-              <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-200 transition-colors">
-                <Icon name="heroicons:star" class="w-8 h-8 text-amber-600" />
+              <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Icon name="heroicons:clipboard-document-list" class="w-8 h-8 text-amber-600" />
               </div>
-              <h3 class="text-xl font-semibold text-slate-900 mb-2">Upgrade to Premium</h3>
-              <p class="text-slate-600">Unlock advanced features and form generation</p>
+              <h3 class="text-xl font-semibold text-slate-900 mb-2">Premium Features</h3>
+              <p class="text-slate-600">Advanced analysis and form generation launching soon</p>
             </div>
           </div>
         </div>
@@ -178,34 +159,32 @@
         </div>
       </div>
 
-      <!-- Premium Features (if not premium) -->
-      <div v-if="!user.isPremium" class="bg-gradient-to-r from-blue-50 to-amber-50 border border-blue-200 rounded-xl p-6 mb-8">
+      <!-- Premium Features Coming Soon Banner -->
+      <div class="relative bg-gradient-to-r from-blue-50 to-amber-50 border-2 border-amber-200 rounded-xl p-6 mb-8">
+        <div class="absolute top-4 right-4">
+          <div class="bg-amber-400 text-slate-900 font-bold text-xs px-4 py-2 rounded-full">
+            COMING SOON
+          </div>
+        </div>
         <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-lg font-semibold text-slate-900 mb-2">Unlock Premium Features</h3>
-            <p class="text-slate-600 mb-4">Get advanced claim tracking, analytics, and Chrome extension access</p>
+          <div class="pr-32">
+            <h3 class="text-lg font-semibold text-slate-900 mb-2">Premium Features On The Way</h3>
+            <p class="text-slate-600 mb-4">We're building advanced features to help you maximize your VA benefits</p>
             <div class="flex items-center space-x-6">
               <div class="flex items-center">
-                <Icon name="heroicons:chart-line" class="w-4 h-4 mr-2" color="red-600" />
-                <span class="text-sm text-slate-700">Claim Tracking</span>
+                <Icon name="heroicons:clock" class="w-4 h-4 mr-2 text-amber-600" />
+                <span class="text-sm text-slate-700">Personalized Action Plans</span>
               </div>
               <div class="flex items-center">
-                <Icon name="heroicons:puzzle-piece" class="w-4 h-4 mr-2" color="red-600" />
-                <span class="text-sm text-slate-700">Chrome Extension</span>
+                <Icon name="heroicons:clock" class="w-4 h-4 mr-2 text-amber-600" />
+                <span class="text-sm text-slate-700">Evidence Recommendations</span>
               </div>
               <div class="flex items-center">
-                <Icon name="heroicons:shield-check" class="w-4 h-4 mr-2" color="red-600" />
-                <span class="text-sm text-slate-700">Advanced Analytics</span>
+                <Icon name="heroicons:clock" class="w-4 h-4 mr-2 text-amber-600" />
+                <span class="text-sm text-slate-700">Appeal Timeline Tracking</span>
               </div>
             </div>
           </div>
-          <Button 
-            @click="navigateTo('/pricing')"
-            variant="primary"
-          >
-            <Icon name="heroicons:star" class="w-4 h-4 mr-2" />
-            Upgrade Now
-          </Button>
         </div>
       </div>
 
@@ -277,6 +256,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from '~/components/atoms/Button.vue'
 import Badge from '~/components/atoms/Badge.vue'
+import Navigation from '~/components/organisms/Navigation.vue'
 
 // Head
 useHead({
@@ -339,7 +319,7 @@ onMounted(async () => {
 const loadUserProfile = async () => {
   try {
     const { apiCall } = useApi()
-    const response = await apiCall('/auth/profile')
+    const response = await apiCall('/api/auth/profile')
 
     if (!response.ok) {
       throw new Error('Authentication failed')
@@ -357,7 +337,7 @@ const loadUserProfile = async () => {
 const loadRecentAnalysis = async () => {
   try {
     const { apiCall } = useApi()
-    const response = await apiCall('/documents/analyses?limit=5')
+    const response = await apiCall('/api/documents/analyses?limit=5')
 
     if (response.ok) {
       const data = await response.json()
@@ -377,7 +357,7 @@ const loadRecentAnalysis = async () => {
 const loadAnalytics = async () => {
   try {
     const { apiCall } = useApi()
-    const response = await apiCall('/documents/analytics')
+    const response = await apiCall('/api/documents/analytics')
 
     if (response.ok) {
       const data = await response.json()
