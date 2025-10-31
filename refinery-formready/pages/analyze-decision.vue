@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
     <!-- Navigation -->
     <Navigation
       :show-new-analysis="false"
@@ -7,33 +7,34 @@
       :show-user-menu="false"
     />
 
-    <div class="py-12">
-      <div class="max-w-7xl mx-auto px-4">
-        <!-- Header -->
-        <div class="text-center mb-12">
-          <h1 class="text-5xl font-bold text-slate-900 mb-4">
-            VA Decision Letter Analysis
-          </h1>
-          <p class="text-xl text-slate-600">
-            Upload your VA decision letter to get instant analysis and understand your
-            claim decision
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-r from-blue-800 to-blue-900 text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold mb-4">VA Decision Letter Analysis</h1>
+          <p class="text-xl text-blue-100">
+            Upload your VA decision letter to get instant analysis and understand your claim decision
           </p>
         </div>
+      </div>
+    </div>
 
-        <!-- Upload Section -->
-        <FileUploadZone
-          v-if="!analyzing && !processing && !results"
-          :uploading="uploading"
-          :error="error"
-          @file-select="handleFileSelect"
-          @analyze="analyzeDecision"
-        />
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Upload Section -->
+      <FileUploadZone
+        v-if="!analyzing && !processing && !results"
+        :uploading="uploading"
+        :error="error"
+        @file-select="handleFileSelect"
+        @analyze="analyzeDecision"
+      />
 
-        <!-- Analyzing State -->
-        <AnalysisLoadingState v-if="analyzing || processing" :stage="currentStage" />
+      <!-- Analyzing State -->
+      <AnalysisLoadingState v-if="analyzing || processing" :stage="currentStage" />
 
-        <!-- Results Section -->
-        <div v-if="results" class="space-y-8">
+      <!-- Results Section -->
+      <div v-if="results" class="space-y-8">
           <!-- Executive Summary -->
           <ExecutiveSummary
             :combined-rating="results.combinedRating"
@@ -107,19 +108,8 @@
                 </div>
               </div>
 
-              <!-- Decision Timeline -->
-              <DecisionTimeline
-                :decision-date="results.decisionDate"
-                :effective-date="results.effectiveDate"
-                :appeal-deadline="results.appealDeadline"
-                :current-step="'decision_received'"
-              />
-
-              <!-- Evidence Checklist -->
-              <EvidenceChecklist
-                :conditions="getDeniedConditions(results)"
-                :claim-type="'appeal'"
-              />
+              <!-- Premium Features Removed (Coming Soon) -->
+              <!-- DecisionTimeline and EvidenceChecklist are premium features -->
 
               <!-- Condition Comparison -->
               <ConditionComparison
@@ -137,18 +127,17 @@
             </div>
           </div>
 
-          <!-- Action Buttons -->
-          <div class="flex flex-col sm:flex-row gap-4">
-            <Button @click="reset" variant="secondary">
-              <Icon name="heroicons:document" class="w-4 h-4 mr-2" />
-              Analyze Another Letter
-            </Button>
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <Button @click="reset" variant="secondary">
+            <Icon name="heroicons:document" class="w-4 h-4 mr-2" />
+            Analyze Another Letter
+          </Button>
 
-            <Button variant="primary" @click="printReport">
-              <Icon name="heroicons:printer" class="w-4 h-4 mr-2" />
-              Print Report
-            </Button>
-          </div>
+          <Button variant="primary" @click="printReport">
+            <Icon name="heroicons:printer" class="w-4 h-4 mr-2" />
+            Print Report
+          </Button>
         </div>
       </div>
     </div>
@@ -167,8 +156,9 @@ import VeteranInfoCard from "~/components/molecules/VeteranInfoCard.vue";
 import DecisionSummarySection from "~/components/organisms/DecisionSummarySection.vue";
 import DenialAnalysisCard from "~/components/organisms/DenialAnalysisCard.vue";
 import ComprehensiveNextStepsPanel from "~/components/organisms/ComprehensiveNextStepsPanel.vue";
-import DecisionTimeline from "~/components/molecules/DecisionTimeline.vue";
-import EvidenceChecklist from "~/components/organisms/EvidenceChecklist.vue";
+// Premium components removed (Coming Soon)
+// import DecisionTimeline from "~/components/molecules/DecisionTimeline.vue";
+// import EvidenceChecklist from "~/components/organisms/EvidenceChecklist.vue";
 import ConditionComparison from "~/components/organisms/ConditionComparison.vue";
 
 const config = useRuntimeConfig();
@@ -221,7 +211,7 @@ const analyzeDecision = async () => {
   try {
     // 1. Get presigned upload URL
     const token = localStorage.getItem('auth_token');
-    const presignedResponse = await fetch(`${apiUrl}/storage/upload/presigned`, {
+    const presignedResponse = await fetch(`${apiUrl}/api/storage/upload/presigned`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -264,7 +254,7 @@ const analyzeDecision = async () => {
 
     // 3. Trigger Python extraction service via API proxy
     const documentId = `decision-${Date.now()}`;
-    const extractResponse = await fetch(`${apiUrl}/va-knowledge/extract-from-s3`, {
+    const extractResponse = await fetch(`${apiUrl}/api/va-knowledge/extract-from-s3`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -316,8 +306,9 @@ const printReport = () => {
 
 // New methods for enhanced components
 const getGrantedCount = (results: any): number => {
+console.log("Results in getGrantedCount:", results);
   if (!results.ratings) return 0;
-  return results.ratings.filter((rating: any) => rating.status === "granted").length;
+  return results.ratings.filter((rating: any) => rating.decision === "granted").length;
 };
 
 const getDeniedCount = (results: any): number => {
