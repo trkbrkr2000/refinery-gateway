@@ -1,6 +1,7 @@
 // ClaimReady VA Tracker Chrome Extension
-// Content script for scraping VA.gov data
+// Content script for fetching VA.gov data via API
 
+// Inline types (can't use imports in content scripts)
 interface Claim {
   id: string;
   condition: string;
@@ -13,43 +14,49 @@ interface Claim {
 
 interface VeteranInfo {
   name: string;
-  ssn: string;
-  vaFileNumber: string;
-  dateOfBirth: string;
+  ssn?: string;
+  vaFileNumber?: string;
+  dateOfBirth?: string;
 }
 
-interface ScrapedData {
-  veteranInfo: VeteranInfo;
+interface ClaimsData {
   claims: Claim[];
-  scrapedAt: string;
+  veteranInfo: VeteranInfo;
+  fetchedAt?: string;
+  lastSync?: string;
 }
 
 interface MessageRequest {
   action: string;
+  url?: string;
 }
 
 interface MessageResponse {
   authenticated?: boolean;
   success?: boolean;
-  data?: ScrapedData;
+  status?: number;
+  data?: any;
   error?: string;
 }
 
-class VaGovScraper {
+class VaGovApiClient {
+  private apiBaseUrl: string = 'https://api.va.gov';
   private isAuthenticated: boolean = false;
-  private claimsData: ScrapedData | null = null;
 
   constructor() {
     this.init();
   }
 
   private init(): void {
+    console.log('🚀 VA.gov API Client initialized');
+
     // Listen for messages from popup
     chrome.runtime.onMessage.addListener((request: MessageRequest, sender, sendResponse: (response: MessageResponse) => void) => {
       this.handleMessage(request, sendResponse);
+      return true; // Required for async sendResponse
     });
 
-    // Check if user is authenticated
+    // Check authentication on load
     this.checkAuthentication();
   }
 
@@ -57,282 +64,268 @@ class VaGovScraper {
     try {
       switch (request.action) {
         case 'checkAuth':
-          sendResponse({ authenticated: this.isAuthenticated });
-          break;
-
         case 'checkVaAuth':
-          await this.checkAuthentication();
-          sendResponse({ authenticated: this.isAuthenticated });
+          const isAuth = await this.checkAuthentication();
+          sendResponse({ authenticated: isAuth });
           break;
 
         case 'scrapeClaims':
-          const data = await this.scrapeClaimsData();
+        case 'fetchClaims':
+          const data = await this.fetchClaimsData();
           sendResponse({ success: true, data });
+          break;
+
+        case 'fetchUrl':
+          const result = await this.fetchUrl(request.url || '');
+          sendResponse(result);
           break;
 
         default:
           sendResponse({ success: false, error: 'Unknown action' });
       }
     } catch (error: any) {
+      console.error('❌ Error handling message:', error);
       sendResponse({ success: false, error: error.message });
     }
   }
 
+  /**
+   * Fetch any URL using the VA session
+   */
+  private async fetchUrl(url: string): Promise<MessageResponse> {
+    try {
+      console.log('🌐 Fetching URL:', url);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include', // Include session cookies
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      const status = response.status;
+      let data: any;
+
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
+
+      console.log(`✅ Fetch complete: ${status}`, data);
+
+      return {
+        success: response.ok,
+        status,
+        data,
+        error: response.ok ? undefined : `HTTP ${status}`
+      };
+    } catch (error: any) {
+      console.error('❌ Fetch error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to fetch URL'
+      };
+    }
+  }
+
+  /**
+   * Check if user is authenticated by calling VA API
+   */
   private async checkAuthentication(): Promise<boolean> {
     try {
-      // Check if user is logged in by looking for authentication indicators
-      const authIndicators = [
-        '.va-button-primary', // VA.gov primary buttons
-        '[data-testid="sign-in-link"]', // Sign in link
-        '.usa-button--primary', // USA.gov primary buttons
-        '.va-button--primary' // VA.gov primary buttons
-      ];
+      console.log('🔐 Checking VA.gov authentication...');
 
-      let isLoggedIn = false;
-      
-      for (const selector of authIndicators) {
-        const element = document.querySelector(selector);
-        if (element && !element.textContent?.toLowerCase().includes('sign in')) {
-          isLoggedIn = true;
-          break;
+      const response = await fetch(`${this.apiBaseUrl}/v0/user`, {
+        method: 'GET',
+        credentials: 'include', // Include session cookies
+        headers: {
+          'Content-Type': 'application/json',
         }
+      });
+
+      this.isAuthenticated = response.ok;
+
+      if (this.isAuthenticated) {
+        console.log('✅ User is authenticated');
+      } else {
+        console.log('❌ User is NOT authenticated');
       }
 
-      // Additional check: look for user profile elements
-      const profileElements = document.querySelectorAll('[data-testid*="profile"], [data-testid*="user"], .profile-menu');
-      if (profileElements.length > 0) {
-        isLoggedIn = true;
-      }
-
-      this.isAuthenticated = isLoggedIn;
-      return isLoggedIn;
-
+      return this.isAuthenticated;
     } catch (error) {
-      console.error('Error checking authentication:', error);
+      console.error('❌ Authentication check failed:', error);
       this.isAuthenticated = false;
       return false;
     }
   }
 
-  private async scrapeClaimsData(): Promise<ScrapedData> {
-    if (!this.isAuthenticated) {
-      throw new Error('User not authenticated with VA.gov');
+  /**
+   * Fetch claims data from VA.gov API
+   */
+  private async fetchClaimsData(): Promise<ClaimsData> {
+    console.log('📊 Fetching claims from VA.gov API...');
+
+    // Check auth first
+    if (!await this.checkAuthentication()) {
+      throw new Error('Not authenticated. Please login to VA.gov first.');
     }
 
-    try {
-      // Navigate to claims page if not already there
-      if (!window.location.href.includes('/track-claims')) {
-        window.location.href = 'https://www.va.gov/track-claims';
-        return { veteranInfo: {} as VeteranInfo, claims: [], scrapedAt: new Date().toISOString() };
-      }
+    // Fetch claims
+    const claims = await this.fetchClaims();
 
-      // Wait for page to load
-      await this.waitForPageLoad();
+    // Fetch veteran profile
+    const veteranInfo = await this.fetchVeteranProfile();
 
-      // Scrape veteran information
-      const veteranInfo = await this.scrapeVeteranInfo();
-
-      // Scrape claims data
-      const claims = await this.scrapeClaims();
-
-      return {
-        veteranInfo,
-        claims,
-        scrapedAt: new Date().toISOString()
-      };
-
-    } catch (error) {
-      console.error('Error scraping claims data:', error);
-      throw error;
-    }
-  }
-
-  private async scrapeVeteranInfo(): Promise<VeteranInfo> {
-    const veteranInfo: VeteranInfo = {
-      name: '',
-      ssn: '',
-      vaFileNumber: '',
-      dateOfBirth: ''
+    const data: ClaimsData = {
+      claims,
+      veteranInfo,
+      fetchedAt: new Date().toISOString(),
     };
 
-    try {
-      // Look for veteran name in various locations
-      const nameSelectors = [
-        '.veteran-name',
-        '[data-testid="veteran-name"]',
-        '.profile-name',
-        'h1, h2, h3'
-      ];
-
-      for (const selector of nameSelectors) {
-        const element = document.querySelector(selector);
-        if (element && element.textContent?.trim()) {
-          veteranInfo.name = element.textContent.trim();
-          break;
-        }
-      }
-
-      // Look for SSN (usually redacted)
-      const ssnElement = document.querySelector('[data-testid*="ssn"], .ssn, [class*="ssn"]');
-      if (ssnElement) {
-        veteranInfo.ssn = ssnElement.textContent?.trim() || '';
-      }
-
-      // Look for VA file number
-      const fileNumberElement = document.querySelector('[data-testid*="file-number"], .file-number, [class*="file-number"]');
-      if (fileNumberElement) {
-        veteranInfo.vaFileNumber = fileNumberElement.textContent?.trim() || '';
-      }
-
-    } catch (error) {
-      console.error('Error scraping veteran info:', error);
-    }
-
-    return veteranInfo;
+    console.log(`✅ Successfully fetched ${claims.length} claims`);
+    return data;
   }
 
-  private async scrapeClaims(): Promise<Claim[]> {
-    const claims: Claim[] = [];
-
+  /**
+   * Fetch all claims from VA API
+   */
+  private async fetchClaims(): Promise<Claim[]> {
     try {
-      // Look for claims in various table/list formats
-      const claimSelectors = [
-        '.claim-item',
-        '[data-testid*="claim"]',
-        '.va-table tbody tr',
-        '.claims-list .claim'
-      ];
-
-      let claimElements: NodeListOf<Element> | null = null;
-      for (const selector of claimSelectors) {
-        claimElements = document.querySelectorAll(selector);
-        if (claimElements.length > 0) break;
-      }
-
-      if (claimElements) {
-        for (const element of claimElements) {
-          try {
-            const claim = await this.extractClaimData(element);
-            if (claim) {
-              claims.push(claim);
-            }
-          } catch (error) {
-            console.error('Error extracting claim data:', error);
-          }
+      const response = await fetch(`${this.apiBaseUrl}/v0/evss_claims_async`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
         }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Claims API returned ${response.status}`);
       }
 
-      // If no claims found in tables, try alternative selectors
-      if (claims.length === 0) {
-        const alternativeSelectors = [
-          '.claim-card',
-          '.claim-summary',
-          '[role="row"]'
-        ];
+      const json = await response.json();
+      const claims: Claim[] = json.data.map((apiClaim: any) => this.formatClaim(apiClaim));
 
-        for (const selector of alternativeSelectors) {
-          const elements = document.querySelectorAll(selector);
-          for (const element of elements) {
-            const claim = await this.extractClaimData(element);
-            if (claim) {
-              claims.push(claim);
-            }
-          }
-        }
-      }
-
+      return claims;
     } catch (error) {
-      console.error('Error scraping claims:', error);
+      console.error('❌ Error fetching claims:', error);
+      throw new Error('Failed to fetch claims from VA.gov API');
     }
-
-    return claims;
   }
 
-  private async extractClaimData(element: Element): Promise<Claim | null> {
+  /**
+   * Convert VA API claim format to our format
+   */
+  private formatClaim(apiClaim: any): Claim {
+    const attrs = apiClaim.attributes || {};
+
+    return {
+      id: apiClaim.id || attrs.claimId || 'unknown',
+      condition: this.extractConditions(attrs),
+      status: this.formatStatus(attrs.status || attrs.claimPhaseDates?.phaseType),
+      filedDate: attrs.dateFiled || attrs.claimDate || '',
+      lastUpdated: attrs.phaseChangeDate || attrs.updatedAt || attrs.claimPhaseDates?.phaseChangeDate || '',
+      evidence: attrs.evss_claim_documents || attrs.documents || [],
+      timeline: attrs.events_timeline || attrs.eventsTimeline || [],
+    };
+  }
+
+  /**
+   * Extract condition names from claim
+   */
+  private extractConditions(attrs: any): string {
+    // Try different possible locations for conditions
+    if (attrs.contentionList && attrs.contentionList.length > 0) {
+      return attrs.contentionList.join(', ');
+    }
+    if (attrs.claimType) {
+      return attrs.claimType;
+    }
+    if (attrs.conditions && Array.isArray(attrs.conditions)) {
+      return attrs.conditions.map((c: any) => c.name || c).join(', ');
+    }
+    return 'Unknown Condition';
+  }
+
+  /**
+   * Format claim status to be human-readable
+   */
+  private formatStatus(status: string): string {
+    if (!status) return 'Unknown';
+
+    // Convert API status codes to readable format
+    const statusMap: Record<string, string> = {
+      'CLAIM_RECEIVED': 'Claim Received',
+      'UNDER_REVIEW': 'Under Review',
+      'GATHERING_OF_EVIDENCE': 'Gathering Evidence',
+      'REVIEW_OF_EVIDENCE': 'Review of Evidence',
+      'PREPARATION_FOR_DECISION': 'Preparation for Decision',
+      'PENDING_DECISION_APPROVAL': 'Pending Decision',
+      'PREPARATION_FOR_NOTIFICATION': 'Preparing Notification',
+      'COMPLETE': 'Complete',
+      'CLOSED': 'Closed',
+    };
+
+    return statusMap[status] || status.replace(/_/g, ' ');
+  }
+
+  /**
+   * Fetch veteran profile information
+   */
+  private async fetchVeteranProfile(): Promise<VeteranInfo> {
     try {
-      const claim: Claim = {
-        id: '',
-        condition: '',
-        status: '',
-        filedDate: '',
-        lastUpdated: '',
-        evidence: [],
-        timeline: []
+      const response = await fetch(`${this.apiBaseUrl}/v0/profile`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('⚠️ Profile API returned', response.status);
+        return this.getDefaultVeteranInfo();
+      }
+
+      const json = await response.json();
+      const profile = json.data?.attributes?.profile || {};
+
+      return {
+        name: `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'Unknown',
+        vaFileNumber: profile.vaFileNumber || profile.vaProfile?.vaFileNumber,
+        ssn: profile.ssn ? this.maskSSN(profile.ssn) : undefined,
+        dateOfBirth: profile.birthDate || profile.dob,
       };
-
-      // Extract claim ID
-      const idElement = element.querySelector('[data-testid*="id"], .claim-id, [class*="id"]');
-      if (idElement) {
-        claim.id = idElement.textContent?.trim() || '';
-      }
-
-      // Extract condition/description
-      const conditionSelectors = [
-        '[data-testid*="condition"]',
-        '[data-testid*="description"]',
-        '.claim-description',
-        '.condition',
-        'h3, h4, h5'
-      ];
-
-      for (const selector of conditionSelectors) {
-        const conditionElement = element.querySelector(selector);
-        if (conditionElement && conditionElement.textContent?.trim()) {
-          claim.condition = conditionElement.textContent.trim();
-          break;
-        }
-      }
-
-      // Extract status
-      const statusSelectors = [
-        '[data-testid*="status"]',
-        '.claim-status',
-        '.status',
-        '.badge'
-      ];
-
-      for (const selector of statusSelectors) {
-        const statusElement = element.querySelector(selector);
-        if (statusElement && statusElement.textContent?.trim()) {
-          claim.status = statusElement.textContent.trim();
-          break;
-        }
-      }
-
-      // Extract dates
-      const dateElements = element.querySelectorAll('[data-testid*="date"], .date, [class*="date"]');
-      for (const dateElement of dateElements) {
-        const text = dateElement.textContent?.trim() || '';
-        if (text.includes('Filed') || text.includes('Submitted')) {
-          claim.filedDate = text;
-        } else if (text.includes('Updated') || text.includes('Modified')) {
-          claim.lastUpdated = text;
-        }
-      }
-
-      // Only return claim if it has essential data
-      if (claim.condition || claim.id) {
-        return claim;
-      }
-
-      return null;
-
     } catch (error) {
-      console.error('Error extracting claim data:', error);
-      return null;
+      console.error('❌ Error fetching profile:', error);
+      return this.getDefaultVeteranInfo();
     }
   }
 
-  private async waitForPageLoad(): Promise<void> {
-    return new Promise((resolve) => {
-      if (document.readyState === 'complete') {
-        resolve();
-      } else {
-        window.addEventListener('load', resolve);
-      }
-    });
+  /**
+   * Default veteran info if API fails
+   */
+  private getDefaultVeteranInfo(): VeteranInfo {
+    return {
+      name: 'Unknown Veteran',
+    };
+  }
+
+  /**
+   * Mask SSN for privacy
+   */
+  private maskSSN(ssn: string): string {
+    if (!ssn || ssn.length < 4) return '***-**-****';
+    return `***-**-${ssn.slice(-4)}`;
   }
 }
 
-// Initialize scraper
-new VaGovScraper();
+// Initialize the API client
+const vaApiClient = new VaGovApiClient();
+
+console.log('✅ VA.gov API content script loaded');
+console.log('📍 Current URL:', window.location.href);
+console.log('📍 Script running on:', document.domain);

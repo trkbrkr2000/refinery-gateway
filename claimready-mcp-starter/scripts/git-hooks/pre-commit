@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# ClaimReady MCP Pre-Commit Hook
+# This hook validates code against ClaimReady standards before allowing commits
+
+set -e
+
+echo "🔍 ClaimReady MCP: Validating code against standards..."
+
+# Check if MCP server is running
+MCP_URL="http://localhost:7101"
+if ! curl -s "$MCP_URL/validation/pre-commit" > /dev/null 2>&1; then
+    echo "⚠️  MCP server not running at $MCP_URL"
+    echo "   Start it with: cd apps/mcp-nest && npm run start:dev"
+    echo "   Skipping validation..."
+    exit 0
+fi
+
+# Get list of staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_FILES" ]; then
+    echo "✅ No files to validate"
+    exit 0
+fi
+
+# Convert to JSON array
+FILES_JSON=$(echo "$STAGED_FILES" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+# Call MCP validation endpoint
+RESPONSE=$(curl -s -X POST "$MCP_URL/validation/pre-commit" \
+    -H "Content-Type: application/json" \
+    -d "{\"files\": $FILES_JSON}")
+
+# Parse response
+SUCCESS=$(echo "$RESPONSE" | jq -r '.success')
+CAN_COMMIT=$(echo "$RESPONSE" | jq -r '.canCommit')
+
+if [ "$CAN_COMMIT" != "true" ]; then
+    echo ""
+    echo "❌ COMMIT BLOCKED - Standards violations found"
+    echo ""
+
+    # Show violations
+    VIOLATIONS=$(echo "$RESPONSE" | jq -r '.violations[]')
+    echo "$RESPONSE" | jq -r '.violations[] | "
+File: \(.file)
+\(.severity | ascii_upcase): \(.message)
+
+Fix: \(.fix // "See standards documentation")
+---"'
+
+    echo ""
+    echo "📚 Review standards: cat standards/claimready-standards.json"
+    echo "🔧 Fix issues and try again"
+    echo ""
+
+    exit 1
+fi
+
+echo "✅ All validation checks passed"
+echo "📝 Proceeding with commit..."
+
+exit 0

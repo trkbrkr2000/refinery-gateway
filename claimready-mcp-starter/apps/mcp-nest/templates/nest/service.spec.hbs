@@ -1,0 +1,13 @@
+import { Test } from '@nestjs/testing'
+import { {{className}} } from '../src/{{name}}.service'
+
+describe('{{className}}', () => {
+  it('executes successfully', async () => {
+    const module = await Test.createTestingModule({
+      providers: [{{className}}],
+    }).compile()
+    const svc = module.get({{className}})
+    const res = await svc.execute({ hello: 'world' })
+    expect(res.ok).toBe(true)
+  })
+})

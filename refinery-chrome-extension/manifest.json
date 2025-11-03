@@ -11,15 +11,21 @@
   "host_permissions": [
     "https://www.va.gov/*",
     "https://eauth.va.gov/*",
+    "https://api.va.gov/*",
     "https://api.claimready.io/*"
   ],
   "background": {
-    "service_worker": "dist/background.js"
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://www.va.gov/*"],
-      "js": ["dist/content.js"],
+      "matches": [
+        "https://www.va.gov/*",
+        "https://eauth.va.gov/*",
+        "https://api.va.gov/*",
+        "https://*.va.gov/*"
+      ],
+      "js": ["content.js"],
       "css": ["content.css"]
     }
   ],
@@ -38,11 +44,5 @@
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["injected.js"],
-      "matches": ["https://www.va.gov/*"]
-    }
-  ]
+  }
 }

@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "data": {
+    "issues": [
+      {
+        "name": "Service connection for tinnitus is granted with an evaluation of 10 percent.",
+        "decision": "granted"
+      },
+      {
+        "name": "Service connection for lumbosacral strain is denied.",
+        "decision": "denied"
+      }
+    ],
+    "meta": {
+      "engine": "fake-parser",
+      "version": "0.0.1"
+    }
+  },
+  "uploadId": null
+}

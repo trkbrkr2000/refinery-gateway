@@ -62,6 +62,8 @@
 
 <script setup lang="ts">
 import Button from '../atoms/Button.vue'
+import { useToast } from '~/composables/useToast'
+import { useAnalysisErrors } from '~/composables/useAnalysisErrors'
 
 interface Props {
   uploading?: boolean
@@ -76,7 +78,11 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   fileSelect: [file: File]
   analyze: []
+  validationError: [error: string]
 }>()
+
+const toast = useToast()
+const { validateFile } = useAnalysisErrors()
 
 const selectedFile = ref<File | null>(null)
 const dragover = ref(false)
@@ -87,14 +93,27 @@ const uploadAreaClasses = computed(() => {
   return `${baseClasses} ${dragoverClasses}`
 })
 
+const validateAndSetFile = (file: File | null) => {
+  if (!file) return
+
+  // Validate file
+  const validationError = validateFile(file)
+  if (validationError) {
+    toast.error(validationError.title, validationError.message)
+    emit('validationError', validationError.message)
+    return
+  }
+
+  // File is valid
+  selectedFile.value = file
+  emit('fileSelect', file)
+}
+
 const handleDrop = (e: DragEvent) => {
   dragover.value = false
   const files = e.dataTransfer?.files
-  if (files && files.length > 0 && files[0].type === 'application/pdf') {
-    selectedFile.value = files[0]
-    emit('fileSelect', files[0])
-  } else {
-    emit('fileSelect', null as any) // This will trigger error handling in parent
+  if (files && files.length > 0) {
+    validateAndSetFile(files[0])
   }
 }
 
@@ -102,8 +121,7 @@ const handleFileSelect = (e: Event) => {
   const target = e.target as HTMLInputElement
   const files = target.files
   if (files && files.length > 0) {
-    selectedFile.value = files[0]
-    emit('fileSelect', files[0])
+    validateAndSetFile(files[0])
   }
 }
 

@@ -1,4 +1,40 @@
-# @refinery/types
+# Refinery Platform
+
+Monorepo containing all Refinery Platform services and shared libraries.
+
+## Services
+
+- **[refinery-api](./refinery-api/)** - REST API service for document extraction
+- **[refinery-gateway](./refinery-gateway/)** - API Gateway with authentication and rate limiting
+- **[refinery-formready](./refinery-formready/)** - Form management UI (Vue.js)
+- **[refinery-chrome-extension](./refinery-chrome-extension/)** - Chrome extension for VA.gov profile syncing
+- **[refinery-python](./refinery-python/)** - Python service for document processing
+- **[refinery-processor](./refinery-processor/)** - Document processing service
+- **[refinery-types](./refinery-types/)** - Shared TypeScript types and interfaces
+- **[refinery-e2e-tests](./refinery-e2e-tests/)** - End-to-end regression testing suite
+
+## E2E Regression Testing
+
+End-to-end tests are maintained in the [refinery-e2e-tests](./refinery-e2e-tests/) directory using Playwright.
+
+**Quick Start:**
+```bash
+cd refinery-e2e-tests
+npm install
+npm test
+```
+
+**Why separate directory?**
+- Tests run against deployed environments (local, staging, production)
+- Independent deployment cadence from services
+- Cross-service workflow testing
+- Clean separation of test code from production code
+
+See [refinery-e2e-tests/README.md](./refinery-e2e-tests/README.md) for full documentation.
+
+---
+
+## @refinery/types
 
 Shared TypeScript types and interfaces for Refinery Platform.
 

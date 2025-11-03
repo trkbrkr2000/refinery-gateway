@@ -1,0 +1,12 @@
+import { Injectable } from '@nestjs/common'
+
+@Injectable()
+export class {{className}} {
+  constructor() {}
+
+  // Example business method
+  async execute(payload: unknown) {
+    // TODO: implement with DTO validation (class-validator) and tests
+    return { ok: true, payload }
+  }
+}

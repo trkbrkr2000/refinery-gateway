@@ -1,0 +1,16 @@
+/* ClaimReady Chrome Extension Content Script Styles */
+/* Styles injected into VA.gov pages if needed */
+
+.claimready-indicator {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: #3b82f6;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 999999;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+

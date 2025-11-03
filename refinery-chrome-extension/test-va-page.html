@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mock VA.gov Claims - Test Page</title>
+  <style>
+    body {
+      font-family: 'Source Sans Pro', Arial, sans-serif;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #f1f1f1;
+    }
+    .header {
+      background: #003d73;
+      color: white;
+      padding: 20px;
+      margin: -20px -20px 20px -20px;
+    }
+    .claim-item {
+      background: white;
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .claim-status {
+      font-weight: bold;
+      color: #0066cc;
+      font-size: 18px;
+    }
+    .claim-id {
+      color: #666;
+      font-size: 14px;
+    }
+    .veteran-info {
+      margin-top: 30px;
+      padding: 20px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 { margin: 0; }
+    h2 { color: #003d73; }
+    h3 { margin-top: 0; color: #112e51; }
+    .meta { color: #666; font-size: 14px; margin: 5px 0; }
+    .test-info {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+    .test-button {
+      background: #0066cc;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .test-button:hover {
+      background: #004c99;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>VA.gov - Your VA Claims and Appeals</h1>
+    <p>Mock test page for Chrome extension development</p>
+  </div>
+
+  <div class="test-info">
+    <h3>🧪 Test Page for Chrome Extension</h3>
+    <p>This page mimics the VA.gov claims page structure. Open browser console (F12) and run:</p>
+    <code>chrome.runtime.sendMessage({action: 'scrapeClaims'}, (response) => console.log(response));</code>
+    <div style="margin-top: 10px;">
+      <button class="test-button" onclick="testScraping()">Test Scraping</button>
+      <button class="test-button" onclick="testAuth()">Check Auth</button>
+    </div>
+  </div>
+
+  <h2>Your Claims</h2>
+  <div id="claimsContainer">
+    <!-- Claim 1 -->
+    <div class="claim-item" data-testid="claim-item-1">
+      <h3 data-testid="claim-condition">PTSD (Post Traumatic Stress Disorder)</h3>
+      <div class="claim-status">Status: <span data-testid="claim-status">Under Review</span></div>
+      <p class="claim-id">Claim ID: <span data-testid="claim-id">600123456</span></p>
+      <p class="meta">Filed: <span data-testid="claim-filed">January 15, 2024</span></p>
+      <p class="meta">Last Updated: <span data-testid="claim-updated">March 20, 2024</span></p>
+      <div class="meta">
+        <p><strong>Evidence submitted:</strong></p>
+        <ul>
+          <li>VA Medical Records - Jan 2024</li>
+          <li>Private Therapist Statement - Feb 2024</li>
+          <li>Buddy Statement - Feb 2024</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Claim 2 -->
+    <div class="claim-item" data-testid="claim-item-2">
+      <h3 data-testid="claim-condition">Tinnitus (Ringing in Ears)</h3>
+      <div class="claim-status">Status: <span data-testid="claim-status">Pending Decision</span></div>
+      <p class="claim-id">Claim ID: <span data-testid="claim-id">600123457</span></p>
+      <p class="meta">Filed: <span data-testid="claim-filed">February 10, 2024</span></p>
+      <p class="meta">Last Updated: <span data-testid="claim-updated">March 25, 2024</span></p>
+      <div class="meta">
+        <p><strong>Evidence submitted:</strong></p>
+        <ul>
+          <li>Audiologist Report - Feb 2024</li>
+          <li>Service Medical Records</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Claim 3 -->
+    <div class="claim-item" data-testid="claim-item-3">
+      <h3 data-testid="claim-condition">Bilateral Knee Strain</h3>
+      <div class="claim-status">Status: <span data-testid="claim-status">Evidence Needed</span></div>
+      <p class="claim-id">Claim ID: <span data-testid="claim-id">600123458</span></p>
+      <p class="meta">Filed: <span data-testid="claim-filed">December 5, 2023</span></p>
+      <p class="meta">Last Updated: <span data-testid="claim-updated">March 15, 2024</span></p>
+      <div class="meta">
+        <p><strong>Evidence requested:</strong></p>
+        <ul>
+          <li>X-ray results needed</li>
+          <li>Orthopedic evaluation pending</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Claim 4 - Older claim -->
+    <div class="claim-item" data-testid="claim-item-4">
+      <h3 data-testid="claim-condition">Back Injury (Lumbar Strain)</h3>
+      <div class="claim-status">Status: <span data-testid="claim-status">Closed - Approved</span></div>
+      <p class="claim-id">Claim ID: <span data-testid="claim-id">600123400</span></p>
+      <p class="meta">Filed: <span data-testid="claim-filed">June 1, 2023</span></p>
+      <p class="meta">Last Updated: <span data-testid="claim-updated">September 30, 2023</span></p>
+      <div class="meta">
+        <p><strong>Decision:</strong> Service-connected at 20% rating</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="veteran-info">
+    <h2>Veteran Information</h2>
+    <p><strong>Name:</strong> <span id="veteranName">John A. Doe</span></p>
+    <p><strong>VA File Number:</strong> <span id="vaFileNumber">12345678</span></p>
+    <p><strong>SSN:</strong> <span id="veteranSSN">***-**-6789</span></p>
+    <p><strong>Date of Birth:</strong> <span id="veteranDOB">01/15/1985</span></p>
+  </div>
+
+  <script>
+    // Helper functions for testing
+    function testScraping() {
+      console.log('🧪 Testing claim scraping...');
+      if (typeof chrome !== 'undefined' && chrome.runtime) {
+        chrome.runtime.sendMessage({action: 'scrapeClaims'}, (response) => {
+          if (response && response.success) {
+            console.log('✅ Scraping successful!');
+            console.log('📊 Scraped data:', response.data);
+            console.log(`Found ${response.data.claims.length} claims`);
+            alert(`Success! Found ${response.data.claims.length} claims. Check console for details.`);
+          } else {
+            console.error('❌ Scraping failed:', response);
+            alert('Scraping failed. Check console for errors.');
+          }
+        });
+      } else {
+        alert('Chrome extension API not available. Make sure extension is loaded.');
+      }
+    }
+
+    function testAuth() {
+      console.log('🔐 Checking VA.gov authentication...');
+      if (typeof chrome !== 'undefined' && chrome.runtime) {
+        chrome.runtime.sendMessage({action: 'checkVaAuth'}, (response) => {
+          console.log('Auth status:', response);
+          alert(`Authenticated: ${response.authenticated}`);
+        });
+      } else {
+        alert('Chrome extension API not available.');
+      }
+    }
+
+    // Log page load
+    console.log('📄 Mock VA.gov test page loaded');
+    console.log('🎯 Use test buttons or run commands in console');
+  </script>
+</body>
+</html>

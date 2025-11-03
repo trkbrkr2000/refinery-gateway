@@ -1,0 +1,469 @@
+// ClaimReady VA Tracker Chrome Extension
+// Content script for scraping VA.gov data
+
+interface Claim {
+  id: string;
+  condition: string;
+  status: string;
+  filedDate: string;
+  lastUpdated: string;
+  evidence: any[];
+  timeline: any[];
+}
+
+interface VeteranInfo {
+  name: string;
+  ssn: string;
+  vaFileNumber: string;
+  dateOfBirth: string;
+}
+
+interface ScrapedData {
+  veteranInfo: VeteranInfo;
+  claims: Claim[];
+  scrapedAt: string;
+}
+
+interface MessageRequest {
+  action: string;
+}
+
+interface MessageResponse {
+  authenticated?: boolean;
+  success?: boolean;
+  data?: ScrapedData;
+  error?: string;
+}
+
+class VaGovScraper {
+  private isAuthenticated: boolean = false;
+  private claimsData: ScrapedData | null = null;
+
+  constructor() {
+    this.init();
+  }
+
+  private init(): void {
+    // Listen for messages from popup
+    chrome.runtime.onMessage.addListener((request: MessageRequest, sender, sendResponse: (response: MessageResponse) => void) => {
+      this.handleMessage(request, sendResponse);
+    });
+
+    // Check if user is authenticated
+    this.checkAuthentication();
+  }
+
+  private async handleMessage(request: MessageRequest, sendResponse: (response: MessageResponse) => void): Promise<void> {
+    try {
+      switch (request.action) {
+        case 'checkAuth':
+          sendResponse({ authenticated: this.isAuthenticated });
+          break;
+
+        case 'checkVaAuth':
+          await this.checkAuthentication();
+          sendResponse({ authenticated: this.isAuthenticated });
+          break;
+
+        case 'scrapeClaims':
+          const data = await this.scrapeClaimsData();
+          sendResponse({ success: true, data });
+          break;
+
+        default:
+          sendResponse({ success: false, error: 'Unknown action' });
+      }
+    } catch (error: any) {
+      sendResponse({ success: false, error: error.message });
+    }
+  }
+
+  private async checkAuthentication(): Promise<boolean> {
+    try {
+      // Method 1: Check for sign-in links (if present, user is NOT logged in)
+      const signInLinks = document.querySelectorAll(
+        'a[href*="sign-in"], a[href*="login"], [data-testid*="sign-in"], [data-testid*="login"]'
+      );
+      
+      // If sign-in links exist and are visible, user is not logged in
+      let hasVisibleSignIn = false;
+      signInLinks.forEach(link => {
+        const text = link.textContent?.toLowerCase() || '';
+        const href = (link as HTMLElement).getAttribute('href') || '';
+        if ((text.includes('sign in') || text.includes('log in') || href.includes('sign-in') || href.includes('login')) 
+            && link.checkVisibility && link.checkVisibility()) {
+          hasVisibleSignIn = true;
+        }
+      });
+
+      // Method 2: Check for user profile/menu elements (if present, user IS logged in)
+      const userIndicators = [
+        '[data-testid*="profile"]',
+        '[data-testid*="user-menu"]',
+        '[data-testid*="account"]',
+        '.profile-menu',
+        '.user-menu',
+        '[aria-label*="account"]',
+        '[aria-label*="profile"]',
+        'a[href*="/profile"]',
+        'a[href*="/account"]',
+      ];
+
+      let hasUserProfile = false;
+      for (const selector of userIndicators) {
+        const elements = document.querySelectorAll(selector);
+        if (elements.length > 0) {
+          // Check if any are visible
+          for (const el of Array.from(elements)) {
+            if ((el as HTMLElement).offsetParent !== null || el.checkVisibility?.()) {
+              hasUserProfile = true;
+              break;
+            }
+          }
+          if (hasUserProfile) break;
+        }
+      }
+
+      // Method 3: Check for claims page specific elements (logged in users see claims)
+      const claimsPageIndicators = [
+        '[data-testid*="claim"]',
+        '.claim-item',
+        '.claims-list',
+        'h1:contains("Your Claims")',
+        'h2:contains("Claims")',
+      ];
+
+      let hasClaimsContent = false;
+      if (window.location.href.includes('va.gov') && 
+          (window.location.href.includes('/track-claims') || window.location.href.includes('/claim'))) {
+        for (const selector of claimsPageIndicators) {
+          const elements = document.querySelectorAll(selector);
+          if (elements.length > 0 && Array.from(elements).some(el => 
+            (el as HTMLElement).offsetParent !== null || el.checkVisibility?.())) {
+            hasClaimsContent = true;
+            break;
+          }
+        }
+      }
+
+      // User is logged in if:
+      // - Has user profile elements, OR
+      // - On claims page with claims content, OR  
+      // - No visible sign-in links (with fallback logic)
+      const isLoggedIn = hasUserProfile || hasClaimsContent || (!hasVisibleSignIn && window.location.href.includes('va.gov'));
+
+      this.isAuthenticated = isLoggedIn;
+      console.log('VA.gov Auth Check:', { hasUserProfile, hasClaimsContent, hasVisibleSignIn, isLoggedIn });
+      return isLoggedIn;
+
+    } catch (error) {
+      console.error('Error checking authentication:', error);
+      this.isAuthenticated = false;
+      return false;
+    }
+  }
+
+  private async scrapeClaimsData(): Promise<ScrapedData> {
+    if (!this.isAuthenticated) {
+      throw new Error('User not authenticated with VA.gov');
+    }
+
+    try {
+      // Navigate to claims page if not already there
+      if (!window.location.href.includes('/track-claims')) {
+        window.location.href = 'https://www.va.gov/track-claims';
+        return { veteranInfo: {} as VeteranInfo, claims: [], scrapedAt: new Date().toISOString() };
+      }
+
+      // Wait for page to load
+      await this.waitForPageLoad();
+
+      // Scrape veteran information
+      const veteranInfo = await this.scrapeVeteranInfo();
+
+      // Scrape claims data
+      const claims = await this.scrapeClaims();
+
+      return {
+        veteranInfo,
+        claims,
+        scrapedAt: new Date().toISOString()
+      };
+
+    } catch (error) {
+      console.error('Error scraping claims data:', error);
+      throw error;
+    }
+  }
+
+  private async scrapeVeteranInfo(): Promise<VeteranInfo> {
+    const veteranInfo: VeteranInfo = {
+      name: '',
+      ssn: '',
+      vaFileNumber: '',
+      dateOfBirth: ''
+    };
+
+    try {
+      // Look for veteran name in various locations
+      const nameSelectors = [
+        '.veteran-name',
+        '[data-testid="veteran-name"]',
+        '.profile-name',
+        'h1, h2, h3'
+      ];
+
+      for (const selector of nameSelectors) {
+        const element = document.querySelector(selector);
+        if (element && element.textContent?.trim()) {
+          veteranInfo.name = element.textContent.trim();
+          break;
+        }
+      }
+
+      // Look for SSN (usually redacted)
+      const ssnElement = document.querySelector('[data-testid*="ssn"], .ssn, [class*="ssn"]');
+      if (ssnElement) {
+        veteranInfo.ssn = ssnElement.textContent?.trim() || '';
+      }
+
+      // Look for VA file number
+      const fileNumberElement = document.querySelector('[data-testid*="file-number"], .file-number, [class*="file-number"]');
+      if (fileNumberElement) {
+        veteranInfo.vaFileNumber = fileNumberElement.textContent?.trim() || '';
+      }
+
+    } catch (error) {
+      console.error('Error scraping veteran info:', error);
+    }
+
+    return veteranInfo;
+  }
+
+  private async scrapeClaims(): Promise<Claim[]> {
+    const claims: Claim[] = [];
+
+    try {
+      // Wait a bit for dynamic content to load
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Look for claims in various table/list formats (most specific first)
+      const claimSelectors = [
+        '[data-testid*="claim-item"]',
+        '[data-testid*="claim-row"]',
+        '.claim-item',
+        '.claim-row',
+        '[data-testid*="claim"]',
+        '.va-table tbody tr[data-testid]',
+        '.claims-list .claim',
+        '.claims-list > li',
+        '.claim-card',
+        '.claim-summary',
+        'table.va-table tbody tr',
+        '[role="row"]:has([data-testid*="claim"])',
+        '[role="row"]:has(.claim)',
+      ];
+
+      let claimElements: NodeListOf<Element> | null = null;
+      for (const selector of claimSelectors) {
+        try {
+          claimElements = document.querySelectorAll(selector);
+          if (claimElements.length > 0) {
+            console.log(`Found ${claimElements.length} claims using selector: ${selector}`);
+            break;
+          }
+        } catch (e) {
+          // Some selectors might not be supported, continue
+          continue;
+        }
+      }
+
+      if (claimElements && claimElements.length > 0) {
+        for (const element of Array.from(claimElements)) {
+          try {
+            const claim = await this.extractClaimData(element);
+            if (claim && (claim.id || claim.condition)) {
+              claims.push(claim);
+            }
+          } catch (error) {
+            console.error('Error extracting claim data:', error);
+          }
+        }
+      }
+
+      // If no claims found, try scraping the entire page text for claim information
+      if (claims.length === 0) {
+        console.log('No claims found with selectors, attempting text-based extraction...');
+        const pageText = document.body.innerText;
+        
+        // Look for patterns that indicate claims
+        const claimPatterns = [
+          /claim\s+#?\s*([A-Z0-9\-]+)/gi,
+          /tracking\s+number:\s*([A-Z0-9\-]+)/gi,
+          /(\d{2}\/\d{2}\/\d{4}).*?claim/gi,
+        ];
+
+        // Try to extract at least one claim from page content
+        if (pageText.includes('claim') || pageText.includes('Claim')) {
+          // Create a basic claim from page content
+          const basicClaim: Claim = {
+            id: 'extracted-' + Date.now(),
+            condition: this.extractConditionFromText(pageText),
+            status: this.extractStatusFromText(pageText),
+            filedDate: this.extractDateFromText(pageText, 'filed'),
+            lastUpdated: this.extractDateFromText(pageText, 'updated'),
+            evidence: [],
+            timeline: [],
+          };
+          
+          if (basicClaim.condition || basicClaim.status) {
+            claims.push(basicClaim);
+          }
+        }
+      }
+
+      console.log(`Scraped ${claims.length} claims total`);
+      return claims;
+
+    } catch (error) {
+      console.error('Error scraping claims:', error);
+      return claims;
+    }
+  }
+
+  private extractConditionFromText(text: string): string {
+    // Look for condition names in the text
+    const conditionKeywords = [
+      'PTSD', 'Tinnitus', 'Hearing Loss', 'Back Pain', 'Knee Pain',
+      'Shoulder Pain', 'Ankle Pain', 'Depression', 'Anxiety', 'Sleep Apnea',
+      'Migraine', 'Headache', 'Diabetes', 'Hypertension'
+    ];
+
+    for (const keyword of conditionKeywords) {
+      if (text.includes(keyword)) {
+        return keyword;
+      }
+    }
+
+    // Try to find condition in common patterns
+    const conditionMatch = text.match(/(?:condition|disability|diagnosis)[:\s]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i);
+    return conditionMatch ? conditionMatch[1] : 'Unknown';
+  }
+
+  private extractStatusFromText(text: string): string {
+    const statusKeywords = ['Pending', 'Under Review', 'Complete', 'Closed', 'Denied', 'Granted', 'Approved'];
+    for (const keyword of statusKeywords) {
+      if (text.includes(keyword)) {
+        return keyword;
+      }
+    }
+    return 'Unknown';
+  }
+
+  private extractDateFromText(text: string, type: 'filed' | 'updated'): string {
+    // Look for dates near keywords
+    const keywords = type === 'filed' ? ['filed', 'submitted', 'received'] : ['updated', 'modified', 'changed'];
+    const datePattern = /(\d{1,2}\/\d{1,2}\/\d{4})/g;
+    
+    for (const keyword of keywords) {
+      const keywordIndex = text.toLowerCase().indexOf(keyword);
+      if (keywordIndex !== -1) {
+        const snippet = text.substring(keywordIndex, keywordIndex + 100);
+        const dateMatch = snippet.match(datePattern);
+        if (dateMatch) {
+          return dateMatch[0];
+        }
+      }
+    }
+    
+    return '';
+  }
+
+  private async extractClaimData(element: Element): Promise<Claim | null> {
+    try {
+      const claim: Claim = {
+        id: '',
+        condition: '',
+        status: '',
+        filedDate: '',
+        lastUpdated: '',
+        evidence: [],
+        timeline: []
+      };
+
+      // Extract claim ID
+      const idElement = element.querySelector('[data-testid*="id"], .claim-id, [class*="id"]');
+      if (idElement) {
+        claim.id = idElement.textContent?.trim() || '';
+      }
+
+      // Extract condition/description
+      const conditionSelectors = [
+        '[data-testid*="condition"]',
+        '[data-testid*="description"]',
+        '.claim-description',
+        '.condition',
+        'h3, h4, h5'
+      ];
+
+      for (const selector of conditionSelectors) {
+        const conditionElement = element.querySelector(selector);
+        if (conditionElement && conditionElement.textContent?.trim()) {
+          claim.condition = conditionElement.textContent.trim();
+          break;
+        }
+      }
+
+      // Extract status
+      const statusSelectors = [
+        '[data-testid*="status"]',
+        '.claim-status',
+        '.status',
+        '.badge'
+      ];
+
+      for (const selector of statusSelectors) {
+        const statusElement = element.querySelector(selector);
+        if (statusElement && statusElement.textContent?.trim()) {
+          claim.status = statusElement.textContent.trim();
+          break;
+        }
+      }
+
+      // Extract dates
+      const dateElements = element.querySelectorAll('[data-testid*="date"], .date, [class*="date"]');
+      for (const dateElement of Array.from(dateElements)) {
+        const text = dateElement.textContent?.trim() || '';
+        if (text.includes('Filed') || text.includes('Submitted')) {
+          claim.filedDate = text;
+        } else if (text.includes('Updated') || text.includes('Modified')) {
+          claim.lastUpdated = text;
+        }
+      }
+
+      // Only return claim if it has essential data
+      if (claim.condition || claim.id) {
+        return claim;
+      }
+
+      return null;
+
+    } catch (error) {
+      console.error('Error extracting claim data:', error);
+      return null;
+    }
+  }
+
+  private async waitForPageLoad(): Promise<void> {
+    return new Promise((resolve) => {
+      if (document.readyState === 'complete') {
+        resolve();
+      } else {
+        window.addEventListener('load', () => resolve());
+      }
+    });
+  }
+}
+
+// Initialize scraper
+new VaGovScraper();

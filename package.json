@@ -22,9 +22,13 @@
   "author": "Refinery Platform",
   "license": "ISC",
   "devDependencies": {
+    "@types/pdfkit": "^0.17.3",
     "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "pdfkit": "^0.17.2"
   }
 }

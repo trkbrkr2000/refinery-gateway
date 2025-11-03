@@ -1,0 +1,282 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-01-31",
+  "description": "ClaimReady product development standards - learned from production issues",
+  "standards": {
+    "frontend": {
+      "componentImports": {
+        "id": "frontend-explicit-imports",
+        "severity": "error",
+        "description": "All components must be explicitly imported, especially from nested folders",
+        "rationale": "Nuxt 3 auto-import doesn't reliably work for components in organisms/ or nested folders",
+        "learnedFrom": "Navigation component not showing on dashboard/documents pages",
+        "pattern": "import ComponentName from '~/components/path/ComponentName.vue'",
+        "examples": {
+          "correct": "import Navigation from '~/components/organisms/Navigation.vue'",
+          "incorrect": "// Using <Navigation /> without import"
+        },
+        "autoFix": true,
+        "validator": "explicit-imports"
+      },
+      "pageStructure": {
+        "id": "frontend-page-hero-header",
+        "severity": "error",
+        "description": "All authenticated pages must have a blue gradient hero header",
+        "rationale": "UI consistency across the product - users expect the same visual structure",
+        "learnedFrom": "analyze-decision.vue didn't match dashboard/documents design",
+        "pattern": {
+          "heroHeader": "bg-gradient-to-r from-blue-800 to-blue-900 text-white",
+          "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12",
+          "background": "bg-gradient-to-br from-slate-50 to-blue-50"
+        },
+        "requiredElements": [
+          "Navigation component",
+          "Hero header with blue gradient",
+          "Main content container with max-w-7xl"
+        ],
+        "validator": "page-structure"
+      },
+      "navigationRequired": {
+        "id": "frontend-navigation-present",
+        "severity": "error",
+        "description": "All authenticated pages must include the Navigation component",
+        "rationale": "Consistent navigation across all pages for logged-in users",
+        "pattern": "Navigation component with props: show-new-analysis, show-dashboard, show-user-menu",
+        "validator": "navigation-present"
+      },
+      "uiConsistency": {
+        "id": "frontend-ui-consistency",
+        "severity": "warning",
+        "description": "Pages must follow consistent design patterns",
+        "patterns": {
+          "background": "from-slate-50 to-blue-50 (not from-gray-50)",
+          "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+          "heroGradient": "from-blue-800 to-blue-900",
+          "spacing": "py-8 for content, py-12 for hero"
+        },
+        "validator": "ui-consistency"
+      }
+    },
+    "backend": {
+      "mongodbUri": {
+        "id": "backend-mongodb-uri-format",
+        "severity": "error",
+        "description": "MongoDB URIs must include database name and authSource parameter",
+        "rationale": "Without /dbname, connects to wrong database. Without authSource=admin, authentication fails",
+        "learnedFrom": "Production connected to 'test' database instead of 'refinery' database",
+        "pattern": "mongodb://user:pass@host:port/dbname?authSource=admin",
+        "examples": {
+          "correct": "mongodb://mongo:pass@mongodb.railway.internal:27017/refinery?authSource=admin",
+          "incorrect": [
+            "mongodb://mongo:pass@mongodb.railway.internal:27017",
+            "mongodb://mongo:pass@mongodb.railway.internal:27017/refinery"
+          ]
+        },
+        "validator": "mongodb-uri"
+      },
+      "dualSave": {
+        "id": "backend-dual-collection-save",
+        "severity": "error",
+        "description": "Document analysis results must be saved to both document_extractions AND analysis_results",
+        "rationale": "API getUserDocument() queries document_extractions, documents list queries analysis_results",
+        "learnedFrom": "Documents uploaded but detail page showed 'Document Not Found'",
+        "pattern": {
+          "collections": ["document_extractions", "analysis_results"],
+          "method": "upsert",
+          "key": "documentId"
+        },
+        "requiredFields": {
+          "document_extractions": ["userId", "documentId", "extractedAt", "status", "ratings", "denialReasons", "veteranInfo"],
+          "analysis_results": ["userId", "documentId", "fileName", "status", "analyzedAt", "conditions"]
+        },
+        "validator": "dual-save"
+      },
+      "authorizerPattern": {
+        "id": "backend-authorizer-graphql",
+        "severity": "error",
+        "description": "Authorizer must be called via GraphQL API directly, not SDK",
+        "rationale": "SDK methods are unreliable, direct GraphQL API is stable",
+        "pattern": {
+          "url": "https://auth.claimready.io/graphql",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer ${token}"
+          }
+        },
+        "mutations": {
+          "login": "mutation Login($params: LoginInput!)",
+          "signup": "mutation SignUp($params: SignUpInput!)",
+          "updateProfile": "mutation UpdateUser($params: UpdateProfileInput!)"
+        },
+        "validator": "authorizer-pattern"
+      },
+      "dtoValidation": {
+        "id": "backend-dto-validation-required",
+        "severity": "error",
+        "description": "All DTOs must have class-validator decorators",
+        "rationale": "Input validation prevents bad data from reaching business logic",
+        "requiredDecorators": [
+          "@IsString()", "@IsEmail()", "@IsBoolean()",
+          "@IsOptional()", "@MinLength()", "@IsNumber()"
+        ],
+        "pattern": "Use @ApiProperty() for Swagger and class-validator decorators",
+        "validator": "dto-validation"
+      },
+      "serviceInjection": {
+        "id": "backend-service-injection",
+        "severity": "error",
+        "description": "Services must use proper dependency injection",
+        "pattern": {
+          "decorator": "@Injectable()",
+          "constructor": "constructor(private readonly serviceName: ServiceType) {}"
+        },
+        "validator": "service-injection"
+      }
+    },
+    "python": {
+      "booleanChecks": {
+        "id": "python-explicit-none-check",
+        "severity": "error",
+        "description": "MongoDB database objects must use explicit None comparison, not boolean evaluation",
+        "rationale": "pymongo database objects don't implement __bool__, causing 'Database objects do not implement truth value testing' error",
+        "learnedFrom": "Production Python service returned 500 error with 'if not self.db:'",
+        "pattern": {
+          "correct": "if self.db is None:",
+          "incorrect": ["if not self.db:", "if self.db:"]
+        },
+        "validator": "boolean-checks"
+      },
+      "mongodbDualSave": {
+        "id": "python-mongodb-dual-save",
+        "severity": "error",
+        "description": "Python extraction services must save to both document_extractions and analysis_results",
+        "rationale": "Matches backend pattern - API expects data in both collections",
+        "pattern": {
+          "method": "update_one with upsert=True",
+          "collections": ["document_extractions", "analysis_results"]
+        },
+        "requiredCode": [
+          "self.db.document_extractions.update_one({\"documentId\": document_id}, {\"$set\": extraction_data}, upsert=True)",
+          "self.db.analysis_results.update_one({\"documentId\": document_id}, {\"$set\": analysis_data}, upsert=True)"
+        ],
+        "validator": "python-dual-save"
+      },
+      "requirements": {
+        "id": "python-pinned-versions",
+        "severity": "warning",
+        "description": "requirements.txt must pin versions for critical packages",
+        "rationale": "Version mismatches cause production failures",
+        "criticalPackages": ["pymongo==4.10.1", "fastapi", "uvicorn", "pydantic"],
+        "validator": "python-requirements"
+      }
+    },
+    "deployment": {
+      "submoduleSync": {
+        "id": "deployment-submodule-sync",
+        "severity": "error",
+        "description": "All submodules must be committed and pushed before parent repo commit",
+        "rationale": "Parent repo references specific commit hashes - unpushed submodule changes won't deploy",
+        "learnedFrom": "UI changes committed to parent but not pushed in refinery-formready submodule",
+        "pattern": "Always commit+push submodule first, then update parent",
+        "validator": "submodule-sync"
+      },
+      "environmentVariables": {
+        "id": "deployment-env-vars",
+        "severity": "error",
+        "description": "Environment variable names must match expected patterns",
+        "rationale": "Code expects specific variable names - Railway may have different names",
+        "knownMismatches": {
+          "AWS_ENDPOINT_URL": "Railway may use AWS_S3_ENDPOINT",
+          "AWS_DEFAULT_REGION": "Railway may use AWS_REGION",
+          "MONGODB_URI": "Must include /dbname?authSource=admin"
+        },
+        "requiredVariables": {
+          "refinery-api": ["MONGODB_URI", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_ENDPOINT_URL", "AWS_DEFAULT_REGION", "AWS_S3_BUCKET_NAME"],
+          "refinery-python": ["MONGODB_URI"],
+          "refinery-formready": ["NUXT_PUBLIC_API_URL", "NUXT_PUBLIC_AUTHORIZER_URL", "NUXT_PUBLIC_AUTHORIZER_CLIENT_ID"]
+        },
+        "validator": "env-vars"
+      },
+      "railwayConfig": {
+        "id": "deployment-railway-config",
+        "severity": "warning",
+        "description": "Railway services must have proper start commands and health checks",
+        "services": {
+          "refinery-api": {
+            "buildCommand": "npm run build",
+            "startCommand": "npm start",
+            "healthcheck": "/health"
+          },
+          "refinery-python": {
+            "buildCommand": "pip install -r requirements.txt",
+            "startCommand": "uvicorn main:app --host 0.0.0.0 --port $PORT"
+          },
+          "refinery-formready": {
+            "buildCommand": "npm run build",
+            "startCommand": "node .output/server/index.mjs"
+          }
+        },
+        "validator": "railway-config"
+      }
+    },
+    "git": {
+      "commitMessages": {
+        "id": "git-commit-format",
+        "severity": "warning",
+        "description": "Commit messages should follow conventional format",
+        "pattern": "verb + what + why",
+        "footer": "🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+        "skipFooter": true,
+        "examples": {
+          "correct": "Add profile page with user information management",
+          "incorrect": "update stuff"
+        },
+        "validator": "commit-format"
+      },
+      "branchNaming": {
+        "id": "git-branch-naming",
+        "severity": "error",
+        "description": "Branch names should be descriptive and follow conventions. Direct commits to main/develop are blocked.",
+        "pattern": "feature/description, fix/description, hotfix/description, or release/version",
+        "rationale": "Prevents accidental commits to production (main) or staging (develop) branches",
+        "protectedBranches": {
+          "main": "production",
+          "develop": "staging"
+        },
+        "allowedPatterns": [
+          "^feature/.+",
+          "^fix/.+",
+          "^hotfix/.+",
+          "^release/.+",
+          "^chore/.+"
+        ],
+        "examples": {
+          "correct": ["feature/add-user-profile", "fix/mongodb-connection", "hotfix/critical-auth-bug"],
+          "incorrect": ["my-branch", "test", "updates"]
+        },
+        "validator": "branch-naming"
+      },
+      "branchProtection": {
+        "id": "git-branch-protection",
+        "severity": "error",
+        "description": "Direct commits to main or develop branches are blocked to prevent accidental production/staging deployments",
+        "rationale": "main = production, develop = staging. Always work in feature branches and merge via PRs",
+        "protectedBranches": ["main", "develop"],
+        "allowedActions": {
+          "main": "merge via PR only (production deployments)",
+          "develop": "merge via PR only (staging deployments)"
+        },
+        "validator": "branch-protection"
+      }
+    }
+  },
+  "meta": {
+    "totalStandards": 16,
+    "criticalStandards": 10,
+    "learnedFromProduction": true,
+    "autoFixAvailable": ["frontend-explicit-imports"],
+    "repository": "https://github.com/trkbrkr2000/refinery-gateway",
+    "maintainer": "ClaimReady Team"
+  }
+}
