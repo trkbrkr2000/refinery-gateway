@@ -20,7 +20,7 @@ test.describe('Anonymous Document Upload Flow', () => {
     await fileInput.setInputFiles(filePath);
 
     // Click analyze button
-    await page.locator('button:has-text("Analyze Document")').click();
+    await page.locator('button:has-text("Analyze Decision Letter")').click();
 
     // Wait for progress indicators to appear
     await expect(page.locator('text=Analyzing Your Decision Letter')).toBeVisible({ timeout: 5000 });
@@ -58,7 +58,7 @@ test.describe('Anonymous Document Upload Flow', () => {
     await expect(page.locator('text=PDF files only', { exact: false })).toBeVisible();
 
     // Analyze button should not trigger upload
-    const analyzeButton = page.locator('button:has-text("Analyze Document")');
+    const analyzeButton = page.locator('button:has-text("Analyze Decision Letter")');
     await expect(analyzeButton).toBeDisabled();
   });
 
@@ -69,7 +69,7 @@ test.describe('Anonymous Document Upload Flow', () => {
     await fileInput.setInputFiles(filePath);
 
     // Click analyze
-    await page.locator('button:has-text("Analyze Document")').click();
+    await page.locator('button:has-text("Analyze Decision Letter")').click();
 
     // Wait for progress UI
     await expect(page.locator('text=Analyzing Your Decision Letter')).toBeVisible({ timeout: 5000 });
@@ -94,7 +94,7 @@ test.describe('Anonymous Document Upload Flow', () => {
     const fileInput = page.locator('input[type="file"]');
     const filePath = path.join(__dirname, '../../fixtures/sample-va-form.pdf');
     await fileInput.setInputFiles(filePath);
-    await page.locator('button:has-text("Analyze Document")').click();
+    await page.locator('button:has-text("Analyze Decision Letter")').click();
 
     // Wait for progress UI
     await expect(page.locator('text=Analyzing Your Decision Letter')).toBeVisible({ timeout: 5000 });
@@ -122,7 +122,7 @@ test.describe('Anonymous Document Upload Flow', () => {
     });
 
     // Click analyze
-    await page.locator('button:has-text("Analyze Document")').click();
+    await page.locator('button:has-text("Analyze Decision Letter")').click();
 
     // Should see error toast
     await expect(page.locator('[class*="border-red"]')).toBeVisible({ timeout: 10000 });
@@ -150,7 +150,7 @@ test.describe('Anonymous Document Upload Flow', () => {
     });
 
     // Click analyze (first attempt - will fail)
-    await page.locator('button:has-text("Analyze Document")').click();
+    await page.locator('button:has-text("Analyze Decision Letter")').click();
 
     // Wait for error toast
     await expect(page.locator('[class*="border-red"]')).toBeVisible({ timeout: 10000 });
@@ -167,7 +167,7 @@ test.describe('Anonymous Document Upload Flow', () => {
     const fileInput = page.locator('input[type="file"]');
     const filePath = path.join(__dirname, '../../fixtures/sample-va-form.pdf');
     await fileInput.setInputFiles(filePath);
-    await page.locator('button:has-text("Analyze Document")').click();
+    await page.locator('button:has-text("Analyze Decision Letter")').click();
 
     // Wait for success toast (appears before redirect)
     await expect(page.locator('text=Analysis Complete!', { exact: false })).toBeVisible({ timeout: 95000 });
@@ -202,7 +202,7 @@ test.describe('Anonymous Upload - File Validation', () => {
     await fileInput.setInputFiles(filePath);
 
     // Analyze button should become enabled
-    await expect(page.locator('button:has-text("Analyze Document")')).toBeEnabled({ timeout: 3000 });
+    await expect(page.locator('button:has-text("Analyze Decision Letter")')).toBeEnabled({ timeout: 3000 });
 
     // Should not show any error toasts
     await expect(page.locator('[class*="border-red"]')).not.toBeVisible();
@@ -227,7 +227,7 @@ test.describe('Anonymous Upload - API Integration', () => {
     const fileInput = page.locator('input[type="file"]');
     const filePath = path.join(__dirname, '../../fixtures/sample-va-form.pdf');
     await fileInput.setInputFiles(filePath);
-    await page.locator('button:has-text("Analyze Document")').click();
+    await page.locator('button:has-text("Analyze Decision Letter")').click();
 
     // Wait for redirect
     await expect(page).toHaveURL(/\/results\/[a-f0-9-]+/, { timeout: 95000 });
@@ -251,7 +251,7 @@ test.describe('Anonymous Upload - API Integration', () => {
     });
 
     // Click analyze
-    await page.locator('button:has-text("Analyze Document")').click();
+    await page.locator('button:has-text("Analyze Decision Letter")').click();
 
     // Should see timeout error
     await expect(page.locator('text=taking longer than expected', { exact: false })).toBeVisible({ timeout: 95000 });
